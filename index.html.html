@@ -1,0 +1,826 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Astro 80/20</title>
+<style>
+:root{--bg:#f7f7f5;--fg:#18181b;--mut:#71717a;--card:#fff;--bd:#e4e4e7;--ac:#18181b;--acf:#fff;--der:#2563eb;--die:#ec4899;--das:#16a34a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111113;--fg:#f4f4f5;--mut:#a1a1aa;--card:#1a1a1d;--bd:#2e2e33;--ac:#f4f4f5;--acf:#111113;--der:#60a5fa;--die:#f472b6;--das:#4ade80;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#111113;--fg:#f4f4f5;--mut:#a1a1aa;--card:#1a1a1d;--bd:#2e2e33;--ac:#f4f4f5;--acf:#111113;--der:#60a5fa;--die:#f472b6;--das:#4ade80;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:560px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+h1{font-size:20px;margin:0;letter-spacing:-.02em}
+nav button{background:none;border:0;color:var(--mut);font:inherit;padding:6px 10px;cursor:pointer;border-radius:8px}
+nav button.on{color:var(--fg);background:var(--card);border:1px solid var(--bd)}
+.box{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:20px}
+label{display:block;font-size:14px;color:var(--mut);margin:14px 0 4px}
+select,.btn{font:inherit;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--fg);padding:10px 12px;width:100%}
+.btn{cursor:pointer;text-align:center}
+.btn.p{background:var(--ac);color:var(--acf);border-color:var(--ac);font-weight:600}
+.btn:focus-visible,select:focus-visible,nav button:focus-visible{outline:2px solid var(--der);outline-offset:2px}
+.row{display:flex;gap:8px}.row>*{flex:1}
+.sent{font-size:24px;line-height:1.35;margin:18px 0;min-height:64px}
+.en{font-size:18px;color:var(--mut)}
+.note{border-top:1px solid var(--bd);margin-top:14px;padding-top:12px;font-size:15px}
+.der{color:var(--der);font-weight:700}.die{color:var(--die);font-weight:700}.das{color:var(--das);font-weight:700}
+.meta{display:flex;justify-content:space-between;color:var(--mut);font-size:13px}
+.bar{height:6px;background:var(--bd);border-radius:6px;overflow:hidden;margin:6px 0 14px}.bar i{display:block;height:100%;background:var(--ac)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.stat{border:1px solid var(--bd);border-radius:12px;padding:12px}.stat b{display:block;font-size:24px}.stat span{color:var(--mut);font-size:13px}
+.rate button{padding:10px 4px;font-size:14px}
+svg{width:100%;height:auto;display:block}
+.hide{display:none}
+
+header{flex-wrap:wrap;gap:8px}nav{display:flex;flex-wrap:wrap;gap:2px}nav button{font-size:13px;padding:6px 8px}
+.chip{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--fg);border-radius:10px;padding:8px 12px;margin:0 6px 6px 0;cursor:pointer}.chip.rvd{cursor:default}
+.btn.der,.btn.die,.btn.das{font-size:20px}#st{font-size:12px;color:var(--mut);margin-top:16px;text-align:center}
+#top{display:flex;gap:10px;align-items:center;font-size:13px;color:var(--mut);margin-bottom:12px}
+.tg{display:inline-block;border:1px solid var(--bd);border-radius:999px;padding:2px 10px;font-size:13px;margin:0 6px 4px 0;color:var(--mut)}.gl{margin-top:10px}
+.rate small{display:block;color:var(--mut);font-size:11px}
+#pop{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 70px);transform:translateX(-50%);opacity:0;pointer-events:none;background:var(--ac);color:var(--acf);padding:8px 16px;border-radius:999px;font-weight:700;z-index:20}
+#pop.go{animation:pp 1.1s ease-out}@keyframes pp{0%{opacity:0;transform:translate(-50%,8px)}18%{opacity:1;transform:translate(-50%,0)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-10px)}}
+@media (prefers-reduced-motion:reduce){#pop.go{animation:pp2 1.1s steps(1)}@keyframes pp2{0%{opacity:1}80%{opacity:0}}}
+</style></head>
+<body><main>
+<header><h1>Astro 80/20</h1><nav id="nav"><button data-t="s" class="on">Sentences</button><button data-t="b">Build</button><button data-t="a">Articles</button><button data-t="w">Words</button><button data-t="p">Progress</button></nav></header>
+<div id="top"></div><div id="app"></div><div id="st">Saved on this device only</div><div id="pop" role="status"></div>
+</main>
+<script>
+// Rows: [German, English, frequency band (approx. rank ceiling of hardest word), level, theme, grammar note]
+const OLD=[
+["Ich habe keine Zeit.","I don’t have time.",100,"A1","Daily","keine negates nouns used without an article; nicht negates verbs and adjectives."],
+["Das ist mein Haus.","That is my house.",100,"A1","Home","Haus is neuter, so das Haus. mein- takes the same endings as ein-: no ending for neuter nominative."],
+["Wo ist der Bahnhof?","Where is the train station?",200,"A1","Daily","Question word first, verb second. Bahnhof is masculine: der Bahnhof."],
+["Ich arbeite jeden Tag.","I work every day.",200,"A1","Work","Time expressions like jeden Tag take the accusative."],
+["Ich möchte bitte ein Wasser.","I would like a water, please.",200,"A1","Restaurant","möchte is the polite form of wanting. Wasser is neuter: ein Wasser (accusative looks the same)."],
+["Kannst du mir helfen?","Can you help me?",200,"A1","Daily","helfen takes the dative: mir, not mich. With a modal verb, the infinitive goes to the end."],
+["Wir essen heute im Restaurant.","We are eating at a restaurant today.",300,"A1","Restaurant","im = in dem. in + dative answers “where?”. The verb stays in second position."],
+["Das Essen ist fertig.","The food is ready.",300,"A1","Kitchen","Das Essen is a verb used as a noun, and these are always neuter."],
+["Das Wasser kocht schon.","The water is already boiling.",300,"A1","Kitchen","Wasser is neuter, so das Wasser. schon = already."],
+["Ich fahre mit dem Zug nach Berlin.","I’m taking the train to Berlin.",300,"A1","Daily","mit always takes the dative: dem Zug. nach is used for cities and countries."],
+["Ich muss morgen früh aufstehen.","I have to get up early tomorrow.",300,"A2","Daily","aufstehen is separable. With a modal verb it stays together as one infinitive at the end."],
+["Ich habe gestern lange gearbeitet.","I worked for a long time yesterday.",300,"A2","Work","Perfekt = haben + past participle at the end of the sentence."],
+["Ich weiß nicht, was ich sagen soll.","I don’t know what I’m supposed to say.",300,"B1","Daily","In an indirect question the verb moves to the end. weiß is irregular (wissen)."],
+["Der Hund ist im Garten.","The dog is in the garden.",400,"A1","Animals","im = in dem. Location (“where?”) takes the dative. Hund is masculine: der Hund."],
+["Ich gehe mit dem Hund spazieren.","I’m going for a walk with the dog.",400,"A1","Animals","mit + dative: dem Hund. spazieren gehen = to go for a walk."],
+["Haben Sie einen Tisch für zwei Personen?","Do you have a table for two people?",400,"A1","Restaurant","Tisch is masculine, so the accusative is einen Tisch. für always takes the accusative."],
+["Mach bitte das Fenster zu.","Please close the window.",400,"A1","Home","Imperative of a separable verb (zumachen): the prefix goes to the end. Fenster is neuter."],
+["Wenn es regnet, bleibe ich zu Hause.","If it rains, I stay at home.",400,"A2","Outdoors","wenn sends the verb to the end of its clause. The main clause then starts with its verb."],
+["Ich freue mich auf das Wochenende.","I’m looking forward to the weekend.",400,"B1","Work","sich freuen auf + accusative is for future events (über is for things happening now)."],
+["Die Katze schläft auf dem Sofa.","The cat is sleeping on the sofa.",500,"A1","Animals","auf + dative when the cat is already there (where?). Katze is feminine: die Katze."],
+["Wir kochen heute Abend zusammen.","We’re cooking together this evening.",500,"A1","Kitchen","heute Abend = this evening. Abend is masculine, but no article is needed here."],
+["Ich stelle die Lampe auf den Tisch.","I’m putting the lamp on the table.",500,"A2","Home","Movement (where to?) means accusative: auf den Tisch. Compare: Die Lampe steht auf dem Tisch."],
+["Hätte ich mehr Zeit, würde ich öfter wandern gehen.","If I had more time, I would go hiking more often.",500,"B2","Outdoors","Unreal condition (Konjunktiv II). Dropping wenn puts the verb first: Hätte ich…"],
+["Die Wohnung hat zwei Zimmer und einen Balkon.","The apartment has two rooms and a balcony.",600,"A1","Home","haben takes the accusative. Balkon is masculine: einen Balkon. Wohnung is feminine."],
+["Ich hätte gern die Rechnung, bitte.","I’d like the bill, please.",600,"A2","Restaurant","hätte gern is a polite request. Rechnung is feminine: die Rechnung."],
+["Obwohl ich müde war, habe ich weitergearbeitet.","Although I was tired, I kept working.",600,"B1","Work","obwohl sends the verb to the end. After the clause, the main clause verb comes first: habe ich."],
+["Der Wald ist sehr ruhig.","The forest is very quiet.",700,"A1","Outdoors","Wald is masculine: der Wald. sehr + adjective = very."],
+["Der Chef hat heute keine Zeit für das Meeting.","The boss has no time for the meeting today.",700,"A2","Work","für + accusative. Meeting is neuter: das Meeting."],
+["Ich räume die Küche auf, bevor die Gäste kommen.","I tidy the kitchen before the guests arrive.",800,"B1","Home","aufräumen is separable. bevor sends the verb to the end. Küche is feminine: die Küche."],
+["Kannst du bitte die Zwiebeln schneiden?","Can you please cut the onions?",800,"A2","Kitchen","Zwiebeln is plural, so die. The infinitive schneiden goes to the end with a modal verb."],
+["Der Hund, den wir gestern gesehen haben, gehört meiner Nachbarin.","The dog we saw yesterday belongs to my neighbor.",800,"B1","Animals","den = masculine accusative relative pronoun (object of gesehen). gehören takes the dative: meiner Nachbarin."],
+["Wir wandern am Wochenende in den Bergen.","We hike in the mountains on the weekend.",900,"A2","Outdoors","am = an dem. Dative plural adds -n: in den Bergen."],
+["Das Pferd steht auf der Wiese.","The horse is standing in the meadow.",900,"A2","Animals","Germans say auf der Wiese. Wiese is feminine, dative: der. Pferd is neuter: das Pferd."],
+["Die Besprechung wurde auf nächste Woche verschoben.","The meeting was postponed until next week.",900,"B2","Work","Passive: wurde + past participle. The doer is not mentioned."]
+];
+const G={
+mod:"Modal verb: it takes the second slot and the main verb goes to the end as an infinitive.",
+dat:"mit, bei, von, zu, nach, aus, seit always take the dative.",
+acc:"Direct objects take the accusative. Only masculine changes: der → den, ein → einen.",
+sep:"Separable verb: the prefix jumps to the end of the main clause.",
+perf:"Perfekt: haben or sein + past participle, with the participle at the end.",
+sub:"In a clause with weil, dass, wenn, obwohl, the conjugated verb goes to the end.",
+v2:"Verb second: whatever comes first, the conjugated verb is the second element.",
+q:"Questions: a question word comes first, or the verb leads in yes/no questions.",
+neg:"kein negates nouns; nicht negates verbs, adjectives and everything else.",
+wo:"Two-way prepositions: dative for location (wo?), accusative for movement (wohin?).",
+refl:"Reflexive verb: the pronoun (mich, dich, sich…) belongs with the verb.",
+imp:"Imperative: the verb comes first.",
+ko2:"Konjunktiv II (hätte, wäre, würde) expresses polite or unreal wishes.",
+rel:"Relative clause: the pronoun matches the noun’s gender, its case comes from its job in the clause, and the verb goes to the end.",
+inf:"Infinitive with zu: zu stands right before the infinitive at the end of the clause.",
+idm:"Fixed expression: feelings and impressions use the dative (mir, dir, ihm…).",
+gen:"Learn every noun with its article: gender is rarely guessable.",
+comp:"Comparison: adjective + -er, then als.",
+sein:"sein and haben are irregular, so learn them as they are.",
+time:"Times: um + clock time, am + day, im + month or season."};
+const note=t=>t.split("+").every(x=>G[x])?t.split("+").map(x=>G[x]).join(" "):t;
+const P=`
+Ich heiße Anna.|My name is Anna.|100|A1|Daily|v2
+Wie geht es dir?|How are you?|100|A1|Daily|q
+Mir geht es gut, danke.|I’m fine, thank you.|200|A1|Daily|idm
+Ich komme aus Tunesien.|I come from Tunisia.|200|A1|Daily|dat
+Ich spreche ein bisschen Deutsch.|I speak a little German.|300|A1|Daily|acc
+Sprichst du Englisch?|Do you speak English?|300|A1|Daily|q
+Ich verstehe das nicht.|I don’t understand that.|200|A1|Daily|neg
+Kannst du das bitte wiederholen?|Can you repeat that, please?|400|A1|Daily|mod
+Was bedeutet das?|What does that mean?|300|A1|Daily|q
+Ich brauche Hilfe.|I need help.|200|A1|Daily|acc
+Entschuldigung, wo ist die Toilette?|Excuse me, where is the restroom?|500|A1|Daily|q
+Wie viel kostet das?|How much does that cost?|300|A1|Daily|q
+Ich nehme das.|I’ll take that.|200|A1|Daily|acc
+Es ist schon spät.|It’s already late.|200|A1|Daily|v2
+Wie spät ist es?|What time is it?|200|A1|Daily|q
+Ich habe Hunger.|I’m hungry.|300|A1|Daily|sein
+Ich habe Durst.|I’m thirsty.|400|A1|Daily|sein
+Mir ist kalt.|I’m cold.|300|A1|Daily|idm
+Ich bin müde.|I’m tired.|200|A1|Daily|sein
+Das gefällt mir.|I like that.|300|A2|Daily|idm
+Es tut mir leid.|I’m sorry.|300|A1|Daily|idm
+Hast du morgen Zeit?|Do you have time tomorrow?|200|A1|Daily|q
+Ich rufe dich später an.|I’ll call you later.|400|A2|Daily|sep
+Ich warte seit einer Stunde.|I’ve been waiting for an hour.|500|A2|Daily|dat
+Wir haben uns lange nicht gesehen.|We haven’t seen each other for a long time.|400|A2|Daily|refl+perf
+Ich denke oft an meine Familie.|I often think about my family.|300|A2|Daily|denken an takes the accusative: an meine Familie.
+Ich glaube, dass er recht hat.|I think he’s right.|300|B1|Daily|sub
+Ich möchte wissen, wann der Zug kommt.|I’d like to know when the train is coming.|400|B1|Daily|sub
+Weil ich krank bin, bleibe ich heute im Bett.|Because I’m sick, I’m staying in bed today.|500|A2|Daily|sub
+Ich habe vergessen, dir zu schreiben.|I forgot to write to you.|500|B1|Daily|inf
+Es ist wichtig, pünktlich zu sein.|It’s important to be on time.|700|B1|Daily|inf
+Ich würde gern nach Deutschland reisen.|I would like to travel to Germany.|500|B1|Daily|ko2
+Wenn ich Zeit hätte, würde ich mehr lesen.|If I had time, I would read more.|400|B2|Daily|ko2+sub
+Das Buch, das ich gelesen habe, war sehr gut.|The book I read was very good.|500|B1|Daily|rel
+Ich arbeite als Lehrer.|I work as a teacher.|800|A2|Work|v2
+Ich habe heute viel zu tun.|I have a lot to do today.|300|A2|Work|inf
+Wann beginnt die Arbeit?|When does work start?|300|A1|Work|q
+Die Arbeit beginnt um acht Uhr.|Work starts at eight o’clock.|300|A1|Work|time
+Ich habe einen Termin um zehn Uhr.|I have an appointment at ten o’clock.|500|A1|Work|acc+time
+Können wir den Termin verschieben?|Can we postpone the appointment?|900|A2|Work|mod
+Ich schicke Ihnen die E-Mail heute noch.|I’ll send you the email today.|500|A2|Work|Ihnen is dative (to whom?), die E-Mail is accusative (what?). The dative object comes first.
+Haben Sie meine Nachricht bekommen?|Did you get my message?|400|A2|Work|perf
+Ich bin im Moment in einer Besprechung.|I’m in a meeting right now.|500|A2|Work|wo
+Mein Kollege ist heute krank.|My colleague is sick today.|700|A1|Work|v2
+Wir müssen das Projekt bis Freitag abschließen.|We have to finish the project by Friday.|700|B1|Work|mod+sep
+Ich bewerbe mich um eine Stelle.|I’m applying for a job.|800|B1|Work|refl
+Das Gehalt ist nicht schlecht.|The salary isn’t bad.|900|A2|Work|neg
+Ich arbeite von zu Hause aus.|I work from home.|300|A2|Work|dat
+Mein Chef ist sehr freundlich.|My boss is very friendly.|700|A1|Work|sein
+Wir haben morgen eine Konferenz.|We have a conference tomorrow.|900|A2|Work|acc
+Der Kunde wartet schon seit zehn Minuten.|The customer has been waiting for ten minutes already.|600|A2|Work|dat
+Ich habe die Rechnung noch nicht bezahlt.|I haven’t paid the invoice yet.|600|A2|Work|perf
+Wir sollten das morgen besprechen.|We should discuss that tomorrow.|500|B1|Work|mod
+Ich kümmere mich um die Kunden.|I take care of the customers.|900|B1|Work|refl
+Nachdem wir gegessen hatten, sind wir zur Arbeit gegangen.|After we had eaten, we went to work.|500|B2|Work|Plusquamperfekt: hatten + participle for what happened first, then Perfekt for what came next.
+Ich wohne in einer kleinen Wohnung.|I live in a small apartment.|300|A1|Home|wo
+Das Schlafzimmer ist im ersten Stock.|The bedroom is on the first floor.|700|A2|Home|wo
+Das Badezimmer ist neben der Küche.|The bathroom is next to the kitchen.|700|A2|Home|wo
+Die Tür ist geschlossen.|The door is closed.|300|A1|Home|gen
+Bitte mach das Licht an.|Please turn on the light.|300|A1|Home|imp+sep
+Ich muss die Wäsche waschen.|I have to do the laundry.|900|A2|Home|mod
+Der Schlüssel liegt auf dem Tisch.|The key is on the table.|500|A1|Home|wo
+Wir haben ein neues Sofa gekauft.|We bought a new sofa.|700|A2|Home|perf
+Das Wohnzimmer ist groß und hell.|The living room is big and bright.|600|A1|Home|gen
+Ich putze jeden Samstag das Bad.|I clean the bathroom every Saturday.|700|A2|Home|acc
+Kannst du den Müll rausbringen?|Can you take out the trash?|900|A2|Home|mod+sep
+Ich suche meinen Schlüssel.|I’m looking for my key.|500|A1|Home|acc
+Das Bett steht an der Wand.|The bed stands against the wall.|400|A2|Home|wo
+Wir ziehen nächsten Monat um.|We’re moving next month.|500|A2|Home|sep
+Die Miete ist zu hoch.|The rent is too high.|600|A2|Home|gen
+Ich hänge das Bild an die Wand.|I’m hanging the picture on the wall.|400|B1|Home|wo
+Das Bild hängt an der Wand.|The picture is hanging on the wall.|400|A2|Home|wo
+Ich lege das Buch auf den Tisch.|I’m putting the book on the table.|500|A2|Home|wo
+Heute scheint die Sonne.|The sun is shining today.|400|A1|Outdoors|v2
+Es ist kalt und es regnet.|It’s cold and it’s raining.|300|A1|Outdoors|v2
+Wir gehen im Park spazieren.|We’re going for a walk in the park.|600|A1|Outdoors|wo
+Der Fluss ist sehr tief.|The river is very deep.|600|A2|Outdoors|gen
+Ich möchte auf den Berg steigen.|I’d like to climb the mountain.|600|A2|Outdoors|wo+mod
+Die Sonne geht um sechs Uhr unter.|The sun sets at six o’clock.|400|A2|Outdoors|sep+time
+Wir sind am Strand gewesen.|We were at the beach.|800|A2|Outdoors|perf
+Ich fahre gern mit dem Fahrrad.|I like riding my bike.|600|A1|Outdoors|dat
+Hast du eine Jacke dabei?|Did you bring a jacket?|700|A2|Outdoors|q
+Der See ist im Sommer warm.|The lake is warm in summer.|700|A1|Outdoors|time
+Im Winter schneit es oft.|It often snows in winter.|500|A1|Outdoors|time
+Wir machen ein Picknick am Fluss.|We’re having a picnic by the river.|900|A2|Outdoors|wo
+Der Weg führt durch den Wald.|The path leads through the forest.|500|B1|Outdoors|durch always takes the accusative.
+Wir sind den ganzen Tag gewandert.|We hiked all day.|700|A2|Outdoors|perf
+Bei schönem Wetter gehen wir raus.|When the weather is nice, we go outside.|400|A2|Outdoors|dat
+Die Luft ist hier sehr sauber.|The air is very clean here.|500|A2|Outdoors|gen
+Einen Tisch für vier Personen, bitte.|A table for four people, please.|400|A1|Restaurant|acc
+Was empfehlen Sie?|What do you recommend?|500|A2|Restaurant|q
+Ich nehme die Suppe und einen Salat.|I’ll have the soup and a salad.|700|A1|Restaurant|acc
+Ich bin Vegetarier.|I’m vegetarian.|1000|A2|Restaurant|sein
+Ist das Essen scharf?|Is the food spicy?|700|A1|Restaurant|q
+Wir möchten zahlen, bitte.|We’d like to pay, please.|400|A1|Restaurant|mod
+Zusammen oder getrennt?|Together or separately?|500|A1|Restaurant|q
+Das Fleisch ist sehr lecker.|The meat is very tasty.|600|A1|Restaurant|gen
+Ich trinke einen Kaffee mit Milch.|I’m drinking a coffee with milk.|500|A1|Restaurant|dat+acc
+Haben Sie auch etwas ohne Fleisch?|Do you also have something without meat?|600|A2|Restaurant|ohne always takes the accusative.
+Die Speisekarte, bitte.|The menu, please.|900|A1|Restaurant|gen
+Das Frühstück ist von sieben bis zehn Uhr.|Breakfast is from seven to ten o’clock.|600|A2|Restaurant|dat
+Es hat sehr gut geschmeckt.|It tasted very good.|400|A2|Restaurant|perf
+Ich bestelle noch ein Bier.|I’m ordering another beer.|800|A1|Restaurant|acc
+Ich brauche ein Messer und ein Brett.|I need a knife and a board.|900|A1|Kitchen|acc
+Schneide die Tomaten in kleine Stücke.|Cut the tomatoes into small pieces.|700|A2|Kitchen|imp
+Die Pfanne ist noch heiß.|The pan is still hot.|1000|A2|Kitchen|gen
+Gib bitte etwas Salz in die Suppe.|Please add some salt to the soup.|600|A2|Kitchen|wo
+Der Kuchen muss eine Stunde backen.|The cake has to bake for an hour.|800|A2|Kitchen|mod
+Ich koche gern italienisch.|I like cooking Italian food.|600|A2|Kitchen|gern after the verb means “like doing it”.
+Wir haben kein Brot mehr.|We have no bread left.|400|A1|Kitchen|neg
+Ist noch Milch im Kühlschrank?|Is there still milk in the fridge?|900|A2|Kitchen|wo
+Die Eier sind im Kühlschrank.|The eggs are in the fridge.|700|A1|Kitchen|wo
+Rühr die Soße um.|Stir the sauce.|900|A2|Kitchen|imp+sep
+Das Rezept ist ganz einfach.|The recipe is really simple.|900|A2|Kitchen|gen
+Ich schäle die Kartoffeln.|I’m peeling the potatoes.|1000|A2|Kitchen|acc
+Der Teller steht im Schrank.|The plate is in the cupboard.|900|A1|Kitchen|wo
+Wie lange muss das kochen?|How long does that have to cook?|500|A2|Kitchen|q+mod
+Ich habe zwei Katzen.|I have two cats.|500|A1|Animals|acc
+Der Vogel singt jeden Morgen.|The bird sings every morning.|600|A1|Animals|acc
+Die Kuh steht auf der Weide.|The cow is standing in the pasture.|1000|A2|Animals|wo
+Mein Hund bellt nachts.|My dog barks at night.|800|A1|Animals|v2
+Der Fisch schwimmt im Wasser.|The fish swims in the water.|500|A1|Animals|wo
+Hast du Angst vor Hunden?|Are you afraid of dogs?|500|A2|Animals|Angst haben vor takes the dative, and the dative plural adds -n: vor Hunden.
+Die Katze fängt eine Maus.|The cat catches a mouse.|700|A2|Animals|acc
+Wir füttern die Tiere jeden Tag.|We feed the animals every day.|700|A2|Animals|acc
+Das Pferd läuft sehr schnell.|The horse runs very fast.|900|A1|Animals|gen
+Im Zoo gibt es viele Tiere.|There are many animals at the zoo.|800|A2|Animals|es gibt takes the accusative (here a plural).
+Ich gehe mit der Katze zum Tierarzt.|I’m taking the cat to the vet.|900|A2|Animals|zum = zu dem. zu and mit take the dative.
+Der Hund ist größer als die Katze.|The dog is bigger than the cat.|500|A2|Animals|comp
+Die Vögel fliegen nach Süden.|The birds fly south.|600|A2|Animals|v2
+Ich lerne seit einem Jahr Deutsch.|I’ve been learning German for a year.|400|A2|Daily|dat
+Kannst du langsamer sprechen?|Can you speak more slowly?|400|A1|Daily|mod+comp
+Ich habe eine Frage.|I have a question.|200|A1|Daily|acc
+Das ist eine gute Idee.|That’s a good idea.|300|A1|Daily|gen
+Ich weiß es nicht.|I don’t know.|200|A1|Daily|neg
+Ich kenne ihn schon lange.|I’ve known him for a long time.|300|A2|Daily|Use kennen for people and places, wissen for facts. ihn is the accusative of er.
+Wo wohnst du?|Where do you live?|200|A1|Daily|q
+Was machst du am Wochenende?|What are you doing at the weekend?|300|A1|Daily|q+time
+Ich stehe um sieben Uhr auf.|I get up at seven o’clock.|300|A1|Daily|sep+time
+Ich gehe nach der Arbeit einkaufen.|I go shopping after work.|300|A2|Daily|nach takes the dative: nach der Arbeit.
+Hast du Lust, ins Kino zu gehen?|Do you feel like going to the cinema?|400|B1|Daily|inf
+Ich habe mich verlaufen.|I got lost.|500|B1|Daily|refl+perf
+Es freut mich, dich kennenzulernen.|Nice to meet you.|400|A2|Daily|inf
+Ich bin mit dem Bus gekommen.|I came by bus.|400|A2|Daily|perf+dat
+Das war ein langer Tag.|That was a long day.|300|A1|Daily|sein
+Gestern war ich im Kino.|Yesterday I was at the cinema.|400|A2|Daily|v2+wo
+Ich hatte keine Ahnung.|I had no idea.|600|A2|Daily|neg
+Morgen fahre ich nach München.|Tomorrow I’m going to Munich.|300|A1|Daily|v2
+Ich bin schon einmal dort gewesen.|I’ve been there once before.|300|A2|Daily|perf
+Entschuldigung, ich habe Sie nicht verstanden.|Sorry, I didn’t understand you.|400|A2|Daily|perf+neg
+Er hat gesagt, dass er später kommt.|He said that he’s coming later.|300|B1|Daily|sub
+Ich habe keine Lust mehr.|I don’t feel like it anymore.|400|A2|Daily|neg
+Wenn du willst, können wir zusammen essen.|If you like, we can eat together.|300|A2|Daily|sub+mod
+Seit ich hier wohne, bin ich glücklicher.|Since I’ve lived here, I’ve been happier.|400|B1|Daily|sub+comp
+Je mehr ich übe, desto besser verstehe ich.|The more I practice, the better I understand.|500|B2|Daily|je … desto takes a comparative in both parts. je sends the verb to the end of its clause.
+Ich habe mich an das Wetter gewöhnt.|I’ve gotten used to the weather.|600|B2|Daily|sich gewöhnen an takes the accusative: an das Wetter. The Perfekt uses haben.
+Man sollte jeden Tag ein bisschen üben.|You should practice a little every day.|400|B1|Daily|man means “one” or “you” in general. It takes the same verb form as er.
+Es kommt darauf an, was du willst.|It depends on what you want.|500|B2|Daily|es kommt darauf an is followed by a clause, and the verb goes to the end of that clause.
+Ich bin froh, dass du da bist.|I’m glad you’re here.|400|B1|Daily|sub
+Ich schreibe eine E-Mail an meinen Chef.|I’m writing an email to my boss.|500|A2|Work|schreiben an takes the accusative: an meinen Chef.
+Wir haben heute eine Besprechung um drei Uhr.|We have a meeting today at three o’clock.|500|A1|Work|time
+Ich muss noch viele Briefe schreiben.|I still have to write a lot of letters.|400|A2|Work|mod
+Können Sie mir bitte helfen?|Could you please help me?|300|A1|Work|helfen takes the dative: mir. After a modal verb the infinitive goes to the end.
+Wann haben Sie Zeit für ein Gespräch?|When do you have time for a conversation?|500|A2|Work|q
+Der Vertrag ist noch nicht unterschrieben.|The contract hasn’t been signed yet.|900|B1|Work|sein + participle describes a result (the contract is in a signed state), not the action.
+Ich habe eine neue Stelle gefunden.|I found a new job.|500|A2|Work|perf
+Die Firma sucht neue Mitarbeiter.|The company is looking for new employees.|600|A2|Work|acc
+Ich verdiene nicht viel.|I don’t earn much.|700|A2|Work|neg
+Wir müssen früher anfangen.|We have to start earlier.|500|A2|Work|mod+comp
+Das Meeting wurde abgesagt.|The meeting was cancelled.|900|B2|Work|Passive: wurde + past participle. Written German prefers wurde to ist worden.
+Ich arbeite nur halbtags.|I only work part-time.|700|A2|Work|v2
+Der Computer funktioniert nicht.|The computer isn’t working.|700|A2|Work|neg
+Hast du die Datei schon geschickt?|Have you already sent the file?|700|A2|Work|perf+q
+Ich war gestern wegen eines Termins beim Arzt.|I was at the doctor’s yesterday because of an appointment.|600|B1|Work|wegen takes the genitive: eines Termins (note the -s). In speech many people use the dative.
+Entschuldigung für die Verspätung.|Sorry for the delay.|800|A2|Work|für always takes the accusative.
+Ich hoffe, dass wir bald eine Lösung finden.|I hope we find a solution soon.|600|B1|Work|sub
+Wir wohnen im dritten Stock.|We live on the third floor.|700|A2|Home|wo
+Die Wohnung ist hell und ruhig.|The apartment is bright and quiet.|600|A1|Home|gen
+Ich möchte ein Zimmer mieten.|I would like to rent a room.|700|A2|Home|mod
+Stell die Tasche bitte auf den Stuhl.|Please put the bag on the chair.|500|A2|Home|wo+imp
+Die Tasche steht auf dem Stuhl.|The bag is on the chair.|500|A2|Home|wo
+Kannst du das Fenster aufmachen?|Can you open the window?|400|A1|Home|mod+sep
+Meine Nachbarn sind sehr nett.|My neighbors are very nice.|800|A1|Home|sein
+Es gibt keinen Aufzug.|There’s no elevator.|900|A2|Home|es gibt takes the accusative, so kein becomes keinen for masculine Aufzug.
+Ich schlafe auf dem Sofa.|I’m sleeping on the sofa.|700|A1|Home|wo
+Die Heizung ist kaputt.|The heating is broken.|800|A2|Home|gen
+Ich muss die Miete bis Montag überweisen.|I have to transfer the rent by Monday.|900|B1|Home|mod
+Seit wann wohnst du hier?|Since when have you lived here?|400|A2|Home|German uses the present tense with seit for something that still continues.
+Wir haben das Bad renoviert.|We renovated the bathroom.|900|B1|Home|perf
+Das Wetter ist heute schön.|The weather is nice today.|400|A1|Outdoors|v2
+Es wird bald dunkel.|It’s getting dark soon.|400|A2|Outdoors|werden + adjective means to become or get: es wird dunkel.
+Der Himmel ist bewölkt.|The sky is cloudy.|700|A2|Outdoors|gen
+Wir sind gestern auf den Berg gestiegen.|We climbed the mountain yesterday.|600|B1|Outdoors|perf+wo
+Hast du Lust, am Fluss spazieren zu gehen?|Do you feel like going for a walk by the river?|600|B1|Outdoors|inf
+Im Sommer fahren wir ans Meer.|In summer we go to the sea.|500|A2|Outdoors|ans = an das. Movement toward a place takes the accusative.
+Die Blumen blühen im Frühling.|The flowers bloom in spring.|900|A2|Outdoors|time
+Der Wind ist heute sehr stark.|The wind is very strong today.|500|A2|Outdoors|gen
+Es hat die ganze Nacht geregnet.|It rained all night.|500|A2|Outdoors|perf
+Nimm einen Schirm mit, es könnte regnen.|Take an umbrella, it might rain.|900|B1|Outdoors|imp+sep+ko2
+Bevor wir losgehen, ziehe ich eine Jacke an.|Before we set off, I’ll put on a jacket.|600|B1|Outdoors|sub+sep
+Was möchten Sie trinken?|What would you like to drink?|400|A1|Restaurant|mod+q
+Ich hätte gern ein Glas Wasser.|I’d like a glass of water.|600|A1|Restaurant|ko2
+Das schmeckt wirklich gut.|That tastes really good.|500|A1|Restaurant|v2
+Ist dieser Platz noch frei?|Is this seat still free?|500|A1|Restaurant|q
+Ich bin allergisch gegen Nüsse.|I’m allergic to nuts.|800|B1|Restaurant|allergisch gegen takes the accusative, and gegen always does.
+Können wir bitte getrennt bezahlen?|Can we pay separately, please?|500|A2|Restaurant|mod
+Zum Nachtisch nehme ich ein Eis.|For dessert I’ll have an ice cream.|900|A2|Restaurant|zum = zu dem. zu always takes the dative.
+Das Essen war leider kalt.|Unfortunately the food was cold.|400|A2|Restaurant|war is the Präteritum of sein. It is common in speech for sein and haben.
+Ich habe eine Reservierung auf den Namen Müller.|I have a reservation under the name Müller.|700|A2|Restaurant|acc
+Die Bedienung ist sehr aufmerksam.|The service is very attentive.|900|B1|Restaurant|gen
+Ich koche heute Abend Nudeln mit Tomatensoße.|I’m cooking pasta with tomato sauce tonight.|900|A2|Kitchen|dat+acc
+Erhitze das Öl in der Pfanne.|Heat the oil in the pan.|900|A2|Kitchen|imp+wo
+Gib die Zwiebeln dazu.|Add the onions.|800|A2|Kitchen|imp
+Der Reis braucht zwanzig Minuten.|The rice needs twenty minutes.|1000|A2|Kitchen|acc
+Hast du Salz und Pfeffer?|Do you have salt and pepper?|900|A1|Kitchen|q
+Ich backe einen Apfelkuchen.|I’m baking an apple cake.|900|A2|Kitchen|acc
+Die Suppe ist zu salzig.|The soup is too salty.|700|A2|Kitchen|gen
+Nimm zwei Eier und etwas Mehl.|Take two eggs and some flour.|700|A2|Kitchen|imp
+Das Wasser muss erst kochen.|The water has to boil first.|300|A2|Kitchen|mod
+Stell den Ofen auf zweihundert Grad.|Set the oven to two hundred degrees.|900|B1|Kitchen|imp+acc
+Wir haben einen Hund und zwei Katzen.|We have a dog and two cats.|500|A1|Animals|acc
+Der Hund spielt im Garten.|The dog is playing in the garden.|500|A1|Animals|wo
+Die Katze schläft den ganzen Tag.|The cat sleeps all day.|500|A1|Animals|acc
+Hast du ein Haustier?|Do you have a pet?|800|A1|Animals|q
+Der Hund muss dreimal am Tag raus.|The dog has to go out three times a day.|500|A2|Animals|mod
+Die Schafe stehen auf der Wiese.|The sheep are standing in the meadow.|900|A2|Animals|wo
+Vögel bauen ihre Nester im Frühling.|Birds build their nests in spring.|700|B1|Animals|ihre is a possessive that agrees with the plural noun Nester (accusative plural).
+Der Tierarzt hat den Hund untersucht.|The vet examined the dog.|900|B1|Animals|perf
+Ich habe Angst vor Spinnen.|I’m afraid of spiders.|700|A2|Animals|Angst haben vor takes the dative, and the dative plural adds -n: vor Spinnen.
+Die Katze, die auf dem Sofa schläft, gehört mir.|The cat sleeping on the sofa is mine.|600|B1|Animals|rel
+`.trim().split("\n").map(l=>{const a=l.split("|");return[a[0],a[1],+a[2],a[3],a[4],note(a[5])]});
+const S=OLD.concat(P);
+const NN=`Haus|das|house
+Hund|der|dog
+Katze|die|cat
+Tisch|der|table
+Stuhl|der|chair
+Fenster|das|window
+Tür|die|door
+Küche|die|kitchen
+Wohnung|die|apartment
+Garten|der|garden
+Bett|das|bed
+Zimmer|das|room
+Schlüssel|der|key
+Buch|das|book
+Brot|das|bread
+Wasser|das|water
+Milch|die|milk
+Kaffee|der|coffee
+Bier|das|beer
+Fleisch|das|meat
+Fisch|der|fish
+Suppe|die|soup
+Salat|der|salad
+Kuchen|der|cake
+Messer|das|knife
+Teller|der|plate
+Pfanne|die|pan
+Kühlschrank|der|fridge
+Tag|der|day
+Woche|die|week
+Jahr|das|year
+Zeit|die|time
+Arbeit|die|work
+Chef|der|boss
+Kollege|der|colleague
+Termin|der|appointment
+Firma|die|company
+Stadt|die|city
+Land|das|country
+Straße|die|street
+Bahnhof|der|train station
+Zug|der|train
+Auto|das|car
+Fahrrad|das|bike
+Schule|die|school
+Kind|das|child
+Mann|der|man
+Frau|die|woman
+Freund|der|friend
+Familie|die|family
+Mutter|die|mother
+Vater|der|father
+Bruder|der|brother
+Schwester|die|sister
+Name|der|name
+Hand|die|hand
+Kopf|der|head
+Auge|das|eye
+Herz|das|heart
+Geld|das|money
+Preis|der|price
+Rechnung|die|bill
+Wetter|das|weather
+Sonne|die|sun
+Regen|der|rain
+Schnee|der|snow
+Berg|der|mountain
+Wald|der|forest
+Fluss|der|river
+See|der|lake
+Strand|der|beach
+Wiese|die|meadow
+Blume|die|flower
+Baum|der|tree
+Vogel|der|bird
+Pferd|das|horse
+Kuh|die|cow
+Maus|die|mouse
+Hotel|das|hotel
+Restaurant|das|restaurant
+Frage|die|question
+Antwort|die|answer
+Problem|das|problem
+Idee|die|idea
+Nachricht|die|message
+Telefon|das|telephone
+Computer|der|computer
+Licht|das|light
+Bild|das|picture
+Mädchen|das|girl
+Brief|der|letter
+Gast|der|guest
+Tier|das|animal
+Essen|das|food
+Frühstück|das|breakfast
+Abend|der|evening
+Morgen|der|morning
+Nacht|die|night
+Arzt|der|doctor
+Apotheke|die|pharmacy
+Krankenhaus|das|hospital
+Supermarkt|der|supermarket
+Bank|die|bank
+Flughafen|der|airport
+Reise|die|trip
+Urlaub|der|vacation
+Wochenende|das|weekend
+Monat|der|month
+Stunde|die|hour
+Minute|die|minute
+Geburtstag|der|birthday
+Hilfe|die|help
+Hunger|der|hunger
+Durst|der|thirst
+Angst|die|fear
+Spaß|der|fun
+Sprache|die|language
+Wort|das|word
+Satz|der|sentence
+Zahl|die|number
+Adresse|die|address
+Ausweis|der|ID card
+Tasche|die|bag
+Handy|das|mobile phone
+Uhr|die|clock, watch
+Platz|der|seat, square
+Ecke|die|corner
+Seite|die|side, page
+Ende|das|end
+Anfang|der|beginning
+Büro|das|office
+Besprechung|die|meeting
+Vertrag|der|contract
+Gehalt|das|salary
+Kunde|der|customer
+Projekt|das|project
+Aufgabe|die|task
+Lehrer|der|teacher
+Stelle|die|job, position
+Feierabend|der|end of the workday
+Wand|die|wall
+Boden|der|floor, ground
+Treppe|die|stairs
+Dach|das|roof
+Balkon|der|balcony
+Sofa|das|sofa
+Lampe|die|lamp
+Spiegel|der|mirror
+Bad|das|bathroom
+Schrank|der|cupboard
+Miete|die|rent
+Nachbar|der|neighbor
+Park|der|park
+Himmel|der|sky
+Wolke|die|cloud
+Wind|der|wind
+Insel|die|island
+Meer|das|sea
+Brücke|die|bridge
+Weg|der|path
+Speisekarte|die|menu
+Kellner|der|waiter
+Getränk|das|drink
+Nachtisch|der|dessert
+Mittagessen|das|lunch
+Abendessen|das|dinner
+Gabel|die|fork
+Löffel|der|spoon
+Glas|das|glass
+Tasse|die|cup
+Topf|der|pot
+Ei|das|egg
+Käse|der|cheese
+Butter|die|butter
+Zucker|der|sugar
+Salz|das|salt
+Reis|der|rice
+Nudeln|die|noodles (plural)
+Tomate|die|tomato
+Zwiebel|die|onion
+Kartoffel|die|potato
+Apfel|der|apple
+Rezept|das|recipe
+Ofen|der|oven
+Schaf|das|sheep
+Schwein|das|pig
+Huhn|das|chicken
+Hase|der|rabbit
+Bär|der|bear
+Wolf|der|wolf
+Elefant|der|elephant
+Affe|der|monkey
+Tierarzt|der|vet
+Zoo|der|zoo`.split("\n").map(l=>{const a=l.split("|");return{de:a[0],art:a[1],en:a[2]}});
+const VV=`gehen|to go
+kommen|to come
+machen|to do, to make
+haben|to have
+sein|to be
+wollen|to want
+können|to be able to, can
+müssen|to have to, must
+sagen|to say
+sehen|to see
+geben|to give
+nehmen|to take
+wissen|to know (a fact)
+kennen|to know (a person)
+denken|to think
+arbeiten|to work
+wohnen|to live
+essen|to eat
+trinken|to drink
+kaufen|to buy
+helfen|to help (+ dative)
+brauchen|to need
+schnell|fast
+langsam|slow
+groß|big
+klein|small
+gut|good
+schlecht|bad
+neu|new
+alt|old
+schön|beautiful
+heiß|hot
+kalt|cold
+viel|much, a lot
+wenig|little
+immer|always
+nie|never
+oft|often
+heute|today
+morgen|tomorrow
+gestern|yesterday
+weil|because
+aber|but
+oder|or
+und|and
+mit|with
+ohne|without
+für|for
+bei|at, near
+nach|after, to
+vor|before, in front of
+zwischen|between
+lernen|to learn
+sprechen|to speak
+verstehen|to understand
+lesen|to read
+schreiben|to write
+hören|to hear, to listen
+fahren|to drive, to travel
+laufen|to run, to walk
+spielen|to play
+öffnen|to open
+schließen|to close
+suchen|to look for
+finden|to find
+bringen|to bring
+bleiben|to stay
+warten|to wait
+fragen|to ask
+antworten|to answer
+kochen|to cook
+schlafen|to sleep
+bezahlen|to pay
+bestellen|to order
+sitzen|to sit
+stehen|to stand
+liegen|to lie, to be located
+leben|to live
+mögen|to like
+wichtig|important
+einfach|simple, easy
+schwer|heavy, difficult
+leicht|light, easy
+teuer|expensive
+billig|cheap
+müde|tired
+krank|sick
+frei|free
+fertig|ready, finished
+lecker|tasty
+warm|warm
+hell|bright
+dunkel|dark
+früh|early
+spät|late
+jetzt|now
+dann|then
+auch|also
+noch|still, yet
+schon|already
+nur|only
+sehr|very
+vielleicht|maybe
+wirklich|really
+wenn|if, when
+dass|that
+wo|where
+wann|when
+warum|why
+wie|how
+was|what
+wer|who`.split("\n").map(l=>{const a=l.split("|");return{de:a[0],art:"",en:a[1]}});
+const BAND={},TM={};
+`100:sein haben und aber oder mit für wenn dass wie was wer wo auch noch schon nur sehr
+200:gehen kommen machen können müssen sagen sehen geben nehmen gut groß neu alt immer nie heute morgen weil ohne bei nach vor dann jetzt Zeit Jahr Tag Mann Frau Kind Land Name Frage Hand
+300:wollen wissen denken arbeiten brauchen klein schlecht viel wenig oft gestern Arbeit Stadt Haus Auto Problem Geld Hilfe Freund Familie Mutter Vater Wasser Zug Schule Woche Abend Morgen Nacht Idee Antwort Ende Anfang Seite Platz warum wann vielleicht wirklich früh spät finden bleiben fragen lernen sprechen verstehen lesen schreiben hören
+400:kennen wohnen essen trinken kaufen helfen schön heiß kalt wichtig einfach schwer leicht frei fertig krank müde Straße Bruder Schwester Kopf Auge Herz Bild Licht Telefon Nachricht Brief Gast Kaffee Brot Preis Stunde Minute Monat Wochenende Bahnhof Chef Termin Firma Arzt Reise Urlaub Wort Satz Zahl Sprache Hund Katze Tisch Bett Zimmer Tür Fenster Küche Wohnung Garten Bier Milch zwischen warm fahren laufen spielen bringen warten antworten schlafen sitzen stehen liegen leben mögen öffnen schließen suchen
+500:Tier Wetter Sonne Regen Schnee Berg Wald Fluss See Strand Baum Blume Vogel Pferd Kuh Hotel Restaurant Essen Frühstück Fleisch Fisch Suppe Salat Büro Kollege Besprechung Computer Schlüssel Stuhl Wand Boden Park Himmel Wind Tasche Handy Uhr Ecke Adresse Rechnung Geburtstag Angst Spaß Hunger Durst Kunde Aufgabe Stelle Projekt kochen bezahlen bestellen lecker hell dunkel teuer billig Lehrer Nachbar Miete Bad Sofa Lampe Balkon Treppe Dach Schrank Brücke Weg Meer Insel Wolke Maus Kuchen Mädchen Computer Mittagessen Abendessen
+1000:Elefant Bär Wolf Affe Ofen Reis Zucker Salz Topf Hase Huhn Schwein Schaf Vertrag Gehalt Feierabend Apotheke Ausweis Spiegel Kellner Nachtisch Pfanne Messer`.split("\n").forEach(l=>{const[b,w]=l.split(":");w.split(" ").forEach(x=>BAND[x]=+b)});
+`Home:Haus Stuhl Tisch Fenster Tür Wohnung Garten Bett Zimmer Schlüssel Licht Bild Wand Boden Treppe Dach Balkon Sofa Lampe Spiegel Bad Schrank Miete Nachbar Telefon
+Kitchen:Küche Brot Milch Messer Teller Pfanne Kühlschrank Gabel Löffel Glas Tasse Topf Ei Käse Butter Zucker Salz Reis Nudeln Tomate Zwiebel Kartoffel Apfel Rezept Ofen kochen lecker
+Restaurant:Bier Kaffee Fleisch Fisch Suppe Salat Kuchen Restaurant Hotel Rechnung Speisekarte Kellner Getränk Nachtisch Mittagessen Abendessen Frühstück Essen bestellen bezahlen essen trinken
+Work:Arbeit Chef Kollege Termin Firma Büro Besprechung Vertrag Gehalt Kunde Projekt Aufgabe Lehrer Stelle Feierabend Computer arbeiten
+Outdoors:Wetter Sonne Regen Schnee Berg Wald Fluss See Strand Wiese Blume Baum Park Himmel Wolke Wind Insel Meer Brücke Weg Straße laufen
+Animals:Hund Katze Vogel Pferd Kuh Maus Tier Schaf Schwein Huhn Hase Bär Wolf Elefant Affe Tierarzt Zoo`.split("\n").forEach(l=>{const[t,w]=l.split(":");w.split(" ").forEach(x=>TM[x]=t)});
+const lvb=b=>b<=300?"A1":b<=600?"A2":b<=800?"B1":"B2";
+const WD=NN.concat(VV).map(w=>{w.band=BAND[w.de]||800;w.theme=TM[w.de]||"Daily";w.lv=lvb(w.band);return w});
+const THEMES=[...new Set(S.map(s=>s[4]))].sort(),WM={};WD.forEach(w=>WM[w.de.toLowerCase()]=w);
+const wcol=w=>w.art?`<span class="${w.art}">${w.art}</span> ${w.de}`:w.de;
+const toks=t=>t.toLowerCase().match(/[a-zäöüß]+/g)||[];
+function gloss(de){const seen={},o=[];(de.match(/[A-Za-zÄÖÜäöüß]+/g)||[]).forEach(t=>{const w=WM[t.toLowerCase()];if(w&&!seen[w.de]){seen[w.de]=1;o.push(`<span class="tg">${wcol(w)} = ${w.en}</span>`)}});return o.length?`<div class="gl">${o.join("")}</div>`:""}
+function ex(w){const s=S.find(s=>toks(s[0]).includes(w.de.toLowerCase()));return s?`<div class="note"><div>${col(s[0])}</div><div class="en" style="font-size:15px">${s[1]}</div></div>`:""}
+
+const $=id=>document.getElementById(id),app=$("app"),MEM={};
+const dflt={cards:{},xp:0,streak:0,best:0,last:"",hist:{},dir:"en2de",hw:{},art:{},today:{d:"",n:0},goal:10,f:{r:"0",l:"0",t:"0",n:"10"}};
+function load(){try{const r=localStorage.getItem("a8020");if(r)return JSON.parse(r)}catch(e){}return MEM.s}
+let ST=Object.assign({},dflt,load()||{}),DOC=null,tm=0,tab="s",q=[],i=0,gain=0,bank=[],out=[],bmsg="",an=null,asc=0,atot=0,cmb=0,ses={},bshow=false;
+function save(){try{localStorage.setItem("a8020",JSON.stringify(ST))}catch(e){}MEM.s=ST;if(DOC){clearTimeout(tm);tm=setTimeout(()=>DOC.set({s:JSON.stringify(ST)}).catch(()=>{}),1500)}}
+async function cloud(){
+ try{const c=await claude.use("db"),u=await claude.use("user");if(!c||!u)return;const id=await u.id();if(!id)return;
+ DOC=c.collection("data/users/"+id).doc("progress");const s=await DOC.get();
+ if(s.exists){const r=JSON.parse(s.data().s);if((r.xp||0)>=ST.xp)ST=Object.assign({},dflt,r)}
+ save();$("st").textContent="Progress is saved to your account";topbar();if(!q.length&&tab!="a")render()}catch(e){}
+}
+const day=d=>(d||new Date()).toISOString().slice(0,10);
+const col=t=>t.replace(/\b(der|die|das)\b/gi,m=>`<span class="${m.toLowerCase()}">${m}</span>`);
+const shuf=a=>{a=a.slice();for(let k=a.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[a[k],a[j]]=[a[j],a[k]]}return a};
+const opts=(a,sel)=>a.map(([v,t])=>`<option value="${v}"${v==sel?" selected":""}>${t}</option>`).join("");
+const learned=()=>Object.keys(ST.cards).filter(k=>/^\d+$/.test(k)&&ST.cards[k].reps>=1);
+const lvl=()=>Math.min(100,Math.floor(ST.xp/150)),stg=l=>l==0?"Level 0":l<=15?"A1":l<=40?"A2":l<=70?"B1":l<100?"B2":"Complete";
+function pop(t){const p=$("pop");p.textContent=t;p.className="";void p.offsetWidth;p.className="go"}
+function topbar(){const n=ST.today.d==day()?ST.today.n:0,p=Math.min(100,n/ST.goal*100);
+ $("top").innerHTML=`<span>🔥 ${ST.streak} day${ST.streak==1?"":"s"}</span><div class="bar" style="flex:1;margin:0"><i style="width:${p}%"></i></div><span>${Math.min(n,ST.goal)}/${ST.goal} today</span><span>Lv ${lvl()}</span>`}
+function addXP(x){
+ const b=lvl(),t=day();ST.xp+=x;gain+=x;
+ if(ST.last!=t){const y=day(new Date(Date.now()-864e5));ST.streak=ST.last==y?ST.streak+1:1;ST.last=t}
+ ST.best=Math.max(ST.best||0,ST.streak);
+ if(ST.today.d!=t)ST.today={d:t,n:0};ST.today.n++;
+ ST.hist[t]=learned().length;
+ pop(lvl()>b?`Level ${lvl()}! +${x} XP`:ST.today.n==ST.goal?`Daily goal reached! +${x} XP`:`+${x} XP`);topbar();
+}
+function sched(c,r){c=Object.assign({ef:2.5,iv:0,reps:0},c);const n=Object.assign({},c);
+ if(r==0){n.reps=0;n.iv=0}else{n.reps=c.reps+1;n.iv=n.reps==1?1:n.reps==2?(r==5?4:3):Math.max(1,Math.round(c.iv*c.ef*(r==3?.8:r==5?1.3:1)))}
+ n.ef=Math.max(1.3,c.ef+.1-(5-r)*(.08+(5-r)*.02));return n}
+const lab=n=>n.reps==0?"10 min":n.iv==1?"1 day":n.iv+" days";
+function review(k,r){const n=sched(ST.cards[k],r);n.due=Date.now()+(r==0?6e5:n.iv*864e5);ST.cards[k]=n;addXP([2,5,10,15][[0,3,4,5].indexOf(r)])}
+function readF(){const g=(id,d)=>$(id)?$(id).value:d,f=ST.f;ST.f={r:g("fr",f.r),l:g("fl",f.l),t:g("ft",f.t),n:g("fn",f.n)}}
+function form(msg){
+ const f=ST.f,rs=[["0","Any range"]];for(let b=100;b<=1000;b+=100)rs.push([b,`Words ${b-99}–${b}`]);
+ const sel=(id,l,o,v)=>`<label for="${id}">${l}</label><select id="${id}">${opts(o,v)}</select>`;
+ let h=sel("fr","Word frequency",rs,f.r)+sel("fl","Level",[["0","Any level"],["A1","A1"],["A2","A2"],["B1","B1"],["B2","B2"]],f.l)+sel("ft","Theme",[["0","Any theme"],...THEMES.map(t=>[t,t])],f.t)+sel("fn","Number per session",[5,10,15,20,25].map(n=>[n,n]),f.n);
+ if(tab!="b")h+=`<label>Direction</label><button class="btn" data-a="dir">${ST.dir=="en2de"?"English → German":"German → English"} (tap to switch)</button>`;
+ const info=tab=="w"?`${WD.length} words`:tab=="b"?"Tap the German words in the right order.":`${S.length} sentences`;
+ app.innerHTML=`<div class="box"><p class="en" style="margin:0">${info}</p>${h}<div style="height:16px"></div><button class="btn p" data-a="go">Start</button><p class="en" style="margin:12px 0 0">${msg||""}</p></div>`;
+}
+function render(){q=[];topbar();tab=="p"?stats():tab=="a"?(asc=atot=cmb=0,cardA()):form()}
+const ok=(f,k)=>(f.r=="0"||k.band==+f.r)&&(f.l=="0"||k.lv==f.l)&&(f.t=="0"||k.theme==f.t);
+function begin(list,keyOf){
+ const now=Date.now(),n=+ST.f.n;
+ if(!list.length)return form("Nothing matches these filters yet. Loosen one of them.");
+ if(tab=="b")q=shuf(list).slice(0,n);
+ else{const due=list.filter(k=>ST.cards[keyOf(k)]&&ST.cards[keyOf(k)].due<=now),nw=list.filter(k=>!ST.cards[keyOf(k)]);q=[...due,...nw].slice(0,n)}
+ if(!q.length)return form("All caught up here. Come back when cards are due.");
+ i=0;gain=0;bank=[];out=[];bmsg="";bshow=false;ses={ok:0,n:0,again:[]};card();
+}
+function card(){if(i>=q.length)return done();tab=="s"?cardS():tab=="w"?cardW():cardB()}
+function done(){
+ const l=lvl(),nx=l>=100?0:150-ST.xp%150,pc=ses.n?Math.round(ses.ok/ses.n*100):0;
+ app.innerHTML=`<div class="box"><div class="sent" style="min-height:0">Session complete</div>
+ <div class="grid"><div class="stat"><b>+${gain}</b><span>XP earned</span></div><div class="stat"><b>${pc}%</b><span>${tab=="b"?"solved first try":"recalled well"}</span></div>
+ <div class="stat"><b>Level ${l}</b><span>${nx} XP to the next level</span></div><div class="stat"><b>🔥 ${ST.streak}</b><span>day streak</span></div></div>
+ ${ses.again.length?`<div class="note"><b>Worth another look:</b><div class="en" style="font-size:15px">${ses.again.join("<br>")}</div></div>`:`<p class="en">Clean session. Nothing to review again.</p>`}
+ <div class="row" style="margin-top:14px"><button class="btn" data-a="back">Change filters</button><button class="btn p" data-a="go">Another session</button></div></div>`;save();
+}
+const head=m=>`<div class="meta"><span>${i+1} / ${q.length}</span><span>${m}</span></div><div class="bar"><i style="width:${i/q.length*100}%"></i></div>`;
+const rt=k=>`<div id="rt" class="row rate hide" style="margin-top:16px">${[[0,"Again"],[3,"Hard"],[4,"Good"],[5,"Easy"]].map(([v,l])=>`<button class="btn" data-a="r" data-v="${v}">${l}<small>${lab(sched(ST.cards[k],v))}</small></button>`).join("")}</div>`;
+const tags=(l,t,b)=>`<span class="tg">${l}</span><span class="tg">${t}</span><span class="tg">words ≤${b}</span>`;
+function cardS(){
+ const s=S[q[i]],e=ST.dir=="en2de";window.hv=[];
+ app.innerHTML=`<div class="box">${head(`${s[3]} · ${s[4]}`)}
+ <div class="sent">${e?`<span class="en" style="font-size:24px">${s[1]}</span>`:col(s[0])}</div><div id="hint"></div>
+ <div id="ans" class="hide"><div class="sent" style="min-height:0">${e?col(s[0]):s[1]}</div>${e?`<div class="en" style="font-size:16px">${s[1]}</div>`:""}
+ <div class="note">${tags(s[3],s[4],s[2])}<div style="margin-top:8px">${s[5]}</div>${gloss(s[0])}</div></div>
+ <div id="rv" class="row"><button class="btn" data-a="hint">Hint</button><button class="btn p" data-a="rev">Reveal answer</button></div>${rt(q[i])}</div>`;
+}
+function cardW(){
+ const w=WD[q[i]],e=ST.dir=="en2de";
+ app.innerHTML=`<div class="box">${head(w.art?"Noun":"Word")}<div class="sent" style="text-align:center;font-size:30px">${e?w.en:wcol(w)}</div>
+ <div id="ans" class="hide"><div class="sent" style="text-align:center;font-size:30px;min-height:0">${e?wcol(w):w.en}</div>
+ <div style="text-align:center">${tags(w.lv,w.theme,w.band)}</div>${w.art?`<div class="note">Learn it as <b>${w.art} ${w.de}</b>, never the word alone.</div>`:""}${ex(w)}</div>
+ <div id="rv"><button class="btn p" data-a="rev">Reveal answer</button></div>${rt("w"+q[i])}</div>`;
+}
+function cardB(){
+ const s=S[q[i]];
+ if(!bank.length&&!out.length)bank=shuf(s[0].split(" ").map((w,k)=>({w,k})));
+ const ch=(a,l)=>l.map(c=>`<button class="chip" data-a="${a}" data-v="${c.k}">${c.w}</button>`).join("");
+ app.innerHTML=`<div class="box">${head(`${s[3]} · ${s[4]}`)}<div class="sent" style="min-height:0">${s[1]}</div>
+ <div class="box" style="min-height:58px;padding:10px;margin-bottom:12px">${ch("un",out)}</div><div>${ch("up",bank)}</div><div style="min-height:50px;margin:8px 0">${bmsg}</div>
+ <div class="row"><button class="btn" data-a="show">Show answer</button><button class="btn p" data-a="chk">Check</button></div></div>`;
+}
+function cardA(){
+ const w=[];NN.forEach(n=>{const a=ST.art[n.de]||{ok:0,bad:0},k=Math.max(1,Math.round(2+3*a.bad-a.ok/2));for(let j=0;j<k;j++)w.push(n)});
+ an=w[Math.floor(Math.random()*w.length)];an.done=false;
+ app.innerHTML=`<div class="box"><div class="meta"><span>${asc} / ${atot} correct${cmb>1?` · 🔥 ${cmb} in a row`:""}</span><span>der, die or das?</span></div>
+ <div class="sent" style="text-align:center;font-size:34px">${an.de}</div><div class="en" style="text-align:center">${an.en}</div>
+ <div class="row" style="margin-top:18px">${["der","die","das"].map(a=>`<button class="btn ${a}" data-a="art" data-v="${a}">${a}</button>`).join("")}</div><div id="am" style="margin-top:14px"></div></div>`;
+}
+function bar(l,a,b){return`<div class="meta" style="margin-top:8px"><span>${l}</span><span>${a}/${b}</span></div><div class="bar" style="margin:2px 0"><i style="width:${b?a/b*100:0}%"></i></div>`}
+function stats(){
+ const L=learned(),W=new Set();
+ L.forEach(k=>toks(S[k][0]).forEach(x=>W.add(x)));
+ Object.keys(ST.cards).filter(k=>k[0]=="w"&&ST.cards[k].reps>=1).forEach(k=>W.add(WD[+k.slice(1)].de.toLowerCase()));
+ const l=lvl(),pct=l>=100?100:(ST.xp%150)/150*100,now=Date.now(),
+ ds=Object.keys(ST.hist).sort().slice(-30),vs=ds.map(d=>ST.hist[d]),mx=Math.max(S.length,...vs),
+ ao=Object.values(ST.art).reduce((a,x)=>a+x.ok,0),ab=Object.values(ST.art).reduce((a,x)=>a+x.bad,0),
+ due=Object.keys(ST.cards).filter(k=>ST.cards[k].due<=now).length,
+ hw=Object.entries(ST.hw).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([w,n])=>`${w.slice(3)} (${n})`).join(", "),
+ wk=Object.entries(ST.art).filter(x=>x[1].bad>0).sort((a,b)=>(b[1].bad-b[1].ok)-(a[1].bad-a[1].ok)).slice(0,5).map(x=>{const n=NN.find(w=>w.de==x[0]);return n?wcol(n):""}).join(", ");
+ let g=`<p class="en">Practice on two different days to see your graph.</p>`;
+ if(ds.length>1){const p=vs.map((v,n)=>`${10+n*(280/(vs.length-1))},${110-v/mx*100}`).join(" ");g=`<svg viewBox="0 0 300 120" role="img" aria-label="Sentences learned over time"><polyline points="${p}" fill="none" stroke="currentColor" stroke-width="2"/></svg><div class="meta"><span>${ds[0]}</span><span>${ds[ds.length-1]}</span></div>`}
+ const wl=Object.keys(ST.cards).filter(k=>k[0]=="w"&&ST.cards[k].reps>=1).length;
+ app.innerHTML=`<div class="box"><div class="meta"><span>Level ${l} · ${stg(l)}</span><span>${ST.xp} XP${l<100?` · ${150-ST.xp%150} to next`:""}</span></div><div class="bar"><i style="width:${pct}%"></i></div>
+ <div class="grid"><div class="stat"><b>${ST.streak}</b><span>day streak (best ${ST.best||0})</span></div><div class="stat"><b>${due}</b><span>cards due now</span></div>
+ <div class="stat"><b>${L.length}/${S.length}</b><span>sentences learned</span></div><div class="stat"><b>${W.size}</b><span>words learned (${wl}/${WD.length} flashcards)</span></div></div>
+ <b>By level</b>${["A1","A2","B1","B2"].map(x=>bar(x,L.filter(k=>S[k][3]==x).length,S.filter(s=>s[3]==x).length)).join("")}
+ <div style="height:14px"></div><b>By theme</b>${THEMES.map(x=>bar(x,L.filter(k=>S[k][4]==x).length,S.filter(s=>s[4]==x).length)).join("")}
+ <div class="note"><b>Learning curve</b>${g}</div>
+ <div class="note"><b>Articles:</b> ${ao+ab?Math.round(ao/(ao+ab)*100)+"% correct ("+(ao+ab)+" answers)":"not practiced yet"}<div class="en" style="font-size:15px">${wk?"Needs work: "+wk:""}</div></div>
+ <div class="note"><b>Words you needed hints for:</b><div class="en" style="font-size:15px">${hw||"None yet."}</div></div>
+ <div class="note"><b>Daily goal</b><label for="gl">Reviews per day</label><select id="gl">${opts([5,10,20,30].map(n=>[n,n]),ST.goal)}</select></div>
+ <div class="note"><b>Backup</b><div class="en" style="font-size:14px">Progress lives in this browser (or your account when hosted here). Copy the text to keep a backup, paste it back to restore.</div>
+ <textarea id="bk" rows="3" style="width:100%;margin:8px 0;font:12px monospace;background:var(--card);color:var(--fg);border:1px solid var(--bd);border-radius:8px"></textarea>
+ <div class="row"><button class="btn" data-a="exp">Show backup</button><button class="btn" data-a="imp">Restore</button></div></div>
+ <p class="en" style="font-size:13px;margin-top:14px">Level 1–15 = A1, 16–40 = A2, 41–70 = B1, 71–99 = B2, 100 = complete. 150 XP per level. Frequency bands and word levels are approximate.</p></div>`;
+ $("gl").onchange=e=>{ST.goal=+e.target.value;save();topbar()};
+}
+function revHint(){const s=S[q[i]],e=ST.dir=="en2de",ws=(e?s[0]:s[1]).split(" ");
+ $("hint").innerHTML=`<div class="en" style="font-size:14px;margin-bottom:6px">Tap the word you want revealed:</div>`+ws.map((w,k)=>window.hv.includes(k)?`<span class="chip rvd">${e?col(w):w}</span>`:`<button class="chip" data-a="hw" data-v="${k}" aria-label="Reveal word ${k+1}">${"•".repeat(Math.min(Math.max(w.replace(/[^A-Za-zÄÖÜäöüß0-9]/g,"").length,2),9))}</button>`).join("")}
+const act={
+ dir(){readF();ST.dir=ST.dir=="en2de"?"de2en":"en2de";save();form()},
+ go(){readF();save();tab=="w"?begin(WD.map((w,k)=>k).filter(k=>ok(ST.f,WD[k])),k=>"w"+k):begin(S.map((s,k)=>k).filter(k=>ok(ST.f,{band:S[k][2],lv:S[k][3],theme:S[k][4]})),k=>k)},
+ back(){form()},
+ rev(){$("ans").classList.remove("hide");$("rt").classList.remove("hide");$("rv").classList.add("hide");if($("hint"))$("hint").innerHTML=""},
+ hint(){revHint()},
+ hw(v){const s=S[q[i]],e=ST.dir=="en2de",ws=(e?s[0]:s[1]).split(" "),w=ws[+v],k=(e?"de:":"en:")+w.toLowerCase().replace(/[.,!?;:“”]/g,"");
+  window.hv.push(+v);ST.hw[k]=(ST.hw[k]||0)+1;save();revHint()},
+ r(v){v=+v;const k=tab=="w"?"w"+q[i]:q[i];review(k,v);ses.n++;v>=4?ses.ok++:0;
+  if(v==0){q.push(q[i]);const s=tab=="w"?WD[q[i]]:S[q[i]];ses.again.push(tab=="w"?`${wcol(s)} = ${s.en}`:col(s[0]))}
+  save();i++;card()},
+ up(v){const k=bank.findIndex(c=>c.k==v);out.push(bank.splice(k,1)[0]);bmsg="";cardB()},
+ un(v){const k=out.findIndex(c=>c.k==v);bank.push(out.splice(k,1)[0]);bmsg="";cardB()},
+ chk(){const s=S[q[i]];if(bank.length){bmsg="Use every word first.";return cardB()}
+  if(out.map(c=>c.w).join(" ")!=s[0]){bmsg="Not quite. Try a different order.";return cardB()}
+  addXP(bshow?3:8);ses.n++;if(!bshow)ses.ok++;
+  app.innerHTML=`<div class="box">${head("Richtig!")}<div class="sent" style="min-height:0">${col(s[0])}</div><div class="en">${s[1]}</div>
+  <div class="note">${tags(s[3],s[4],s[2])}<div style="margin-top:8px">${s[5]}</div>${gloss(s[0])}</div><div style="height:14px"></div><button class="btn p" data-a="bn">Next</button></div>`;save()},
+ bn(){i++;bank=[];out=[];bmsg="";bshow=false;card()},
+ show(){bshow=true;bmsg=`<span class="en">${col(S[q[i]][0])}</span>`;cardB()},
+ art(v){
+  if(an.done)return;an.done=true;const g=v==an.art,a=ST.art[an.de]||{ok:0,bad:0};g?a.ok++:a.bad++;ST.art[an.de]=a;atot++;
+  if(g){asc++;cmb++;addXP(2+Math.min(cmb,5)-1)}else cmb=0;save();
+  $("am").innerHTML=`<p style="margin:0 0 8px">${g?"Correct: ":"Not quite: "}${wcol(an)} = ${an.en}${g&&cmb>1?` · 🔥 ${cmb} in a row`:""}</p>${g?"":ex(an)}<button class="btn p" data-a="nx" style="margin-top:8px">Next</button>`},
+ nx(){cardA()},
+ exp(){$("bk").value=JSON.stringify(ST);$("bk").select();try{navigator.clipboard.writeText($("bk").value)}catch(e){}},
+ imp(){try{const r=JSON.parse($("bk").value);if(typeof r.xp!="number")throw 0;ST=Object.assign({},dflt,r);save();pop("Restored");topbar();stats()}catch(e){pop("Paste a valid backup first")}}
+};
+app.onclick=e=>{const b=e.target.closest("[data-a]");if(b&&act[b.dataset.a])act[b.dataset.a](b.dataset.v)};
+$("nav").onclick=e=>{const b=e.target.closest("[data-t]");if(!b)return;tab=b.dataset.t;document.querySelectorAll("#nav button").forEach(x=>x.className=x==b?"on":"");render()};
+render();cloud();
+</script></body></html>
