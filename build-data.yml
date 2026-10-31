@@ -1,0 +1,24 @@
+name: Build sentence data
+on: workflow_dispatch
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download open data (Tatoeba via ManyThings, lemma list)
+        run: |
+          mkdir -p tmp
+          curl -fL -o tmp/deu-eng.zip https://www.manythings.org/anki/deu-eng.zip
+          unzip -o tmp/deu-eng.zip -d tmp
+          curl -fL -o tmp/lemma.txt https://raw.githubusercontent.com/michmech/lemmatization-lists/master/lemmatization-de.txt
+      - name: Build data-bulk.js
+        run: python3 tools/build_sentences.py tmp/deu.txt tmp/lemma.txt data-words.js data-bulk.js
+      - name: Commit result
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@users.noreply.github.com"
+          git add data-bulk.js
+          git commit -m "Update bulk sentences" || echo "No changes"
+          git push
