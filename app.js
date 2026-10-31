@@ -94,12 +94,13 @@ function done(){
 const head=m=>`<div class="meta"><span>${i+1} / ${q.length}</span><span>${m}</span></div><div class="bar"><i style="width:${i/q.length*100}%"></i></div>`;
 const rt=k=>`<div id="rt" class="row rate hide" style="margin-top:16px">${[[0,"Again"],[3,"Hard"],[4,"Good"],[5,"Easy"]].map(([v,l])=>`<button class="btn" data-a="r" data-v="${v}">${l}<small>${lab(sched(ST.cards[k],v))}</small></button>`).join("")}</div>`;
 const tags=(l,t,b)=>`<span class="tg">${l}</span><span class="tg">${TE[t]||""} ${t}</span><span class="tg">words ≤${b}</span>`;
+const cas=s=>s[6]?`<details class="note"${ST.casual?" open":""}><summary>💬 How Germans really say it</summary><div style="margin-top:8px">${col(s[6])} ${typeof spk=="function"?spk(s[6]):""}</div></details>`:"";
 function cardS(){
  const s=S[q[i]],e=ST.dir=="en2de";window.hv=[];
  app.innerHTML=`<div class="box">${head(`${s[3]} · ${s[4]}`)}
  <div class="sent">${e?`<span class="en" style="font-size:24px">${s[1]}</span>`:col(s[0])}</div><div id="hint"></div>
  <div id="ans" class="hide"><div class="sent" style="min-height:0">${e?col(s[0]):s[1]}</div>${e?`<div class="en" style="font-size:16px">${s[1]}</div>`:""}
- <div class="note">${tags(s[3],s[4],s[2])}<div style="margin-top:8px">${s[5]}</div>${gloss(s[0])}</div></div>
+ <div class="note">${tags(s[3],s[4],s[2])}<div style="margin-top:8px">${s[5]}</div>${gloss(s[0])}</div>${cas(s)}</div>
  <div id="rv" class="row"><button class="btn" data-a="hint">Hint</button><button class="btn p" data-a="rev">Reveal answer</button></div>${rt(q[i])}</div>`;
 }
 function cardW(){

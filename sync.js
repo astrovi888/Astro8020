@@ -24,7 +24,7 @@ function merge(a,b){
  r.hist=Object.assign({},b.hist);for(const k in (a.hist||{}))r.hist[k]=Math.max(a.hist[k],r.hist[k]||0);
  r.hw=Object.assign({},b.hw);for(const k in (a.hw||{}))r.hw[k]=Math.max(a.hw[k],r.hw[k]||0);
  r.art=Object.assign({},b.art);for(const k in (a.art||{})){const y=r.art[k]||{ok:0,bad:0};r.art[k]={ok:Math.max(a.art[k].ok,y.ok),bad:Math.max(a.art[k].bad,y.bad)}}
- r.f=a.f||b.f||dflt.f;{const keep=k=>k[0]!="w"||(a.wv===2&&a.cards&&a.cards[k])||(b.wv===2&&b.cards&&b.cards[k]);for(const k in r.cards)if(!keep(k))delete r.cards[k];r.wv=2}r.ach=Object.assign({},b.ach,a.ach);r.read=Object.assign({},b.read,a.read);r.dq=Object.assign({},b.dq,a.dq);["nses","built","perfect","mbest","ce","cs","fb","fu"].forEach(k=>r[k]=Math.max(a[k]||0,b[k]||0));["snd","auto","slow","lb","nick","ads","nag"].forEach(k=>{r[k]=a[k]!==undefined?a[k]:b[k]});r.dir=a.dir||b.dir;r.goal=a.goal||b.goal||10;return r;
+ r.f=a.f||b.f||dflt.f;{const keep=k=>k[0]!="w"||(a.wv===2&&a.cards&&a.cards[k])||(b.wv===2&&b.cards&&b.cards[k]);for(const k in r.cards)if(!keep(k))delete r.cards[k];r.wv=2}r.ach=Object.assign({},b.ach,a.ach);r.read=Object.assign({},b.read,a.read);r.dq=Object.assign({},b.dq,a.dq);["nses","built","perfect","mbest","ce","cs","fb","fu"].forEach(k=>r[k]=Math.max(a[k]||0,b[k]||0));["snd","auto","slow","lb","nick","ads","nag","casual"].forEach(k=>{r[k]=a[k]!==undefined?a[k]:b[k]});r.dir=a.dir||b.dir;r.goal=a.goal||b.goal||10;return r;
 }
 function setNote(t){$("st").textContent=t}
 async function push(){
@@ -59,7 +59,7 @@ function modal(m){
   signup:`<h2>Create account</h2><form data-f="signup">${f("un","Username (3–20 letters or numbers)","text","username",'maxlength="20"')}${f("ae","Email (Gmail works)","email","email")}${f("ap","Password (min 6 characters)","password","new-password",'minlength="6"')}${f("ap2","Confirm password","password","new-password",'minlength="6"')}${sub("Send me a code")}</form><p class="lk">Your progress will sync across devices. <a href="#" data-m="login">I already have an account</a></p>`,
   reset:`<h2>Reset password</h2><form data-f="reset">${f("ae","Email","email","email")}${sub("Send reset link")}</form><p class="lk"><a href="#" data-m="login">Back to log in</a></p>`,
   newpass:`<h2>Choose a new password</h2><form data-f="newpass">${f("ap","New password","password","new-password",'minlength="6"')}${sub("Save password")}</form>`,
-  acct:`<h2>Account</h2><p class="en"><b>${USER&&USER.user_metadata&&USER.user_metadata.username?esc(USER.user_metadata.username):""}</b> ${USER?esc(USER.email):""}</p><p class="en" style="font-size:14px">Your progress syncs automatically.</p><div class="row"><button class="btn" data-x="sync">Sync now</button><button class="btn" data-x="out">Log out</button></div>`,
+  acct:`<h2>Account</h2><p class="en"><b>${USER&&USER.user_metadata&&USER.user_metadata.username?esc(USER.user_metadata.username):""}</b> ${USER?esc(USER.email):""}</p><p class="en" style="font-size:14px">Your progress syncs automatically.</p><div class="row"><button type="button" class="btn" data-x="sync">Sync now</button><button type="button" class="btn" data-x="out">Log out</button></div>`,
   about:ABOUT_HTML,
   privacy:`<h2>Privacy</h2>
 <p><b>On your device.</b> Your progress, settings and achievements are saved in your browser (local storage). Nothing else is stored unless you create an account.</p>
@@ -71,12 +71,12 @@ function modal(m){
 <p><b>Your choices.</b> To have your account and data deleted, message ${HANDLE} on Instagram or WhatsApp. Clearing your browser data removes the local copy. Astro 80/20 is not intended for children under 13.</p>
 <p class="lk">Last updated: October 2026.</p>`,
   support:`<h2>Support the project</h2><p>Astro 80/20 is free. If it helps you, you can support the creator in small ways (even tiny amounts are appreciated):</p>
-${CRYPTO_ADDR?`<div class="note"><b>Crypto${CRYPTO_NET?" ("+esc(CRYPTO_NET)+")":""}</b><div style="word-break:break-all;font:13px monospace;margin:6px 0">${esc(CRYPTO_ADDR)}</div><button class="btn" data-x="copyaddr">Copy address</button></div>`:`<div class="note"><b>Crypto</b><div class="en" style="font-size:14px">Wallet address coming soon.</div></div>`}
+${CRYPTO_ADDR?`<div class="note"><b>Crypto${CRYPTO_NET?" ("+esc(CRYPTO_NET)+")":""}</b><div style="word-break:break-all;font:13px monospace;margin:6px 0">${esc(CRYPTO_ADDR)}</div><button type="button" class="btn" data-x="copyaddr">Copy address</button></div>`:`<div class="note"><b>Crypto</b><div class="en" style="font-size:14px">Wallet address coming soon.</div></div>`}
 <div class="note"><b>Buy me a coffee / Patreon</b><div class="en" style="font-size:14px">${COFFEE_URL||PATREON_URL?`${COFFEE_URL?`<a href="${COFFEE_URL}" target="_blank" rel="noopener">Coffee</a> `:""}${PATREON_URL?`<a href="${PATREON_URL}" target="_blank" rel="noopener">Patreon</a>`:""}`:"Coming later."}</div></div>
 <div class="note"><b>Optional ads</b><div class="en" style="font-size:14px">Prefer not to donate? Turn on clean, non-intrusive ads in Progress → Settings. Off by default.</div></div>
 <p class="lk">Questions or ideas? <a href="${IG_URL}" target="_blank" rel="noopener">${HANDLE}</a></p>`
  };
- $("mb").innerHTML=`<button class="x" data-x="close" aria-label="Close">×</button>${C[m]}<p id="mm" class="en" role="status" style="font-size:14px;margin:10px 0 0"></p>`;
+ $("mb").dataset.f=m;$("mb").innerHTML=`<button type="button" class="x" data-x="close" aria-label="Close">×</button>${C[m]}<p id="mm" class="en" role="status" style="font-size:14px;margin:10px 0 0"></p>`;
  const i1=$("ae")||$("ap");if(i1)i1.focus();
 }
 async function authSubmit(mode){
@@ -98,7 +98,7 @@ async function authSubmit(mode){
   closeModal();
  }catch(e){msg("Network problem. Please try again.",true)}
 }
-$("mb").onsubmit=e=>{e.preventDefault();authSubmit(e.target.dataset.f)};
+$("mb").onsubmit=e=>{e.preventDefault();const m=e.target.dataset.f;if(["login","signup","otp","code","reset","newpass"].includes(m))authSubmit(m)};
 document.addEventListener("click",e=>{
  const a=e.target.closest("[data-m]");if(a){e.preventDefault();modal(a.dataset.m);return}
  const x=e.target.closest("[data-x]");

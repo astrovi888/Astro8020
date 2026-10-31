@@ -84,7 +84,7 @@ async function lbAct(v){
 /* ---- settings ---- */
 function settingsView(){const on=x=>x?"On":"Off",row=(t,d,k,val)=>`<div class="set"><div><b>${t}</b><div class="en" style="font-size:14px">${d}</div></div><button class="btn" data-set="${k}" style="width:auto;min-width:70px">${val}</button></div>`;
  const ss=window.speechSynthesis,nv=ss?ss.getVoices().filter(x=>/^de/i.test(x.lang)):[],ac=AC?AC.state:"not started yet";
- app.innerHTML=seg()+`<div class="box">${row("Sound effects","Short tones for right and wrong answers","snd",on(ST.snd!==false))}${row("Tap feedback","A tiny tick and vibration when you tap (vibration: Android)","hap",on(ST.hap!==false))}${row("Auto-play pronunciation","Speak German when an answer is revealed","auto",on(ST.auto))}${row("Slow speech","Slower, clearer pronunciation","slow",on(ST.slow))}${row("Support with ads","Optional and off by default. Clean, non-intrusive ads help keep this free.","ads",on(ST.ads))}
+ app.innerHTML=seg()+`<div class="box">${row("Sound effects","Short tones for right and wrong answers","snd",on(ST.snd!==false))}${row("Tap feedback","A tiny tick and vibration when you tap (vibration: Android)","hap",on(ST.hap!==false))}${row("Auto-play pronunciation","Speak German when an answer is revealed","auto",on(ST.auto))}${row("Always show real-life German","Open the casual, spoken version on every card that has one","casual",on(ST.casual))}${row("Slow speech","Slower, clearer pronunciation","slow",on(ST.slow))}${row("Support with ads","Optional and off by default. Clean, non-intrusive ads help keep this free.","ads",on(ST.ads))}
  <div class="note"><b>🪙 ${coins()} coins · ❄️ ${(ST.fb||0)-(ST.fu||0)} streak freeze${(ST.fb||0)-(ST.fu||0)==1?"":"s"}</b><div class="en" style="font-size:14px">Earn coins by practicing. A streak freeze protects your streak if you miss a day (max 2).</div><div style="height:8px"></div><button class="btn" data-do="buyfz">Buy a freeze · 50 🪙</button></div>
  <div class="note"><b>Check your audio</b><div class="row" style="margin-top:8px"><button class="btn" data-do="tsnd">Test sound</button><button class="btn" data-do="tvoice">Test German voice</button></div>
  <p class="en" style="font-size:13px;margin:10px 0 0">Sound engine: ${ac}. Speech: ${ss?"supported":"not supported"}. German voices found: ${nv.length?nv.map(x=>esc(x.name)).join(", "):"none"}.</p>
@@ -179,11 +179,11 @@ function mgSetup(){mgStop();
  mgBoard().then(h=>{const el=$("mgb");if(el&&tab=="m"&&!MG)el.innerHTML=h})}
 function mgStart(){mgStop();MG={pool:mgPool(),L:[],R:[],sel:null,score:0,end:Date.now()+60000,done:false,iv:0};
  for(let k=0;k<6;k++){const w=mgNew();MG.L.push(w);MG.R.push(w)}MG.R=shuf(MG.R);
- app.innerHTML=`<div class="box"><div class="meta"><span>Matched <b id="ms" style="color:var(--fg)">0</b></span><span id="mt">60s</span></div><div class="bar"><i id="mb" style="width:100%;animation:none"></i></div><div id="mgg" class="mg"></div></div>`;
+ app.innerHTML=`<div class="box"><div class="meta"><span>Matched <b id="ms" style="color:var(--fg)">0</b></span><span id="mt">60s</span></div><div class="bar"><i id="mgbar" style="width:100%;animation:none"></i></div><div id="mgg" class="mg"></div></div>`;
  mgGrid();MG.iv=setInterval(mgTick,200)}
 function mgGrid(){const sl=(s,k)=>MG.sel&&MG.sel[0]==s&&MG.sel[1]==k?" sel":"";
  $("mgg").innerHTML=`<div>${MG.L.map((w,k)=>`<button class="tile${sl("L",k)}" data-mg="L${k}">${w.art?`<span class="${w.art}">${w.art}</span> `:""}${w.de}</button>`).join("")}</div><div>${MG.R.map((w,k)=>`<button class="tile${sl("R",k)}" data-mg="R${k}">${esc(eshort(w))}</button>`).join("")}</div>`}
-function mgTick(){if(!MG||MG.done)return;const left=Math.max(0,(MG.end-Date.now())/1000),t=$("mt"),b=$("mb");if(t)t.textContent=Math.ceil(left)+"s";if(b)b.style.width=Math.min(100,left/60*100)+"%";if(left<=0)mgEnd()}
+function mgTick(){if(!MG||MG.done)return;const left=Math.max(0,(MG.end-Date.now())/1000),t=$("mt"),b=$("mgbar");if(t)t.textContent=Math.ceil(left)+"s";if(b)b.style.width=Math.min(100,left/60*100)+"%";if(left<=0)mgEnd()}
 function mgTap(s,k){if(!MG||MG.done)return;
  if(!MG.sel||MG.sel[0]==s){MG.sel=[s,k];return mgGrid()}
  const a=MG.sel[0]=="L"?MG.sel[1]:k,b=MG.sel[0]=="L"?k:MG.sel[1];MG.sel=null;
@@ -226,7 +226,7 @@ const LT=[["s","Sentences"],["b","Build"],["a","Articles"],["w","Words"]];
 const lseg=()=>`<div class="seg" role="tablist" aria-label="Practice mode">${LT.map(([k,l])=>`<button class="${tab==k?"on":""}" data-lt="${k}">${l}</button>`).join("")}</div>`;
 const grp=t=>"sbaw".includes(t)?"s":t;
 function bbHi(){document.querySelectorAll("#bbar button").forEach(b=>b.classList.toggle("on",b.dataset.g==grp(tab)))}
-function flash(k){let f=$("fl");if(!f){f=document.createElement("div");f.id="fl";document.body.appendChild(f)}f.className="";void f.offsetWidth;f.className="fl-"+k}
+function flash(k){let f=$("flash");if(!f){f=document.createElement("div");f.id="flash";document.body.appendChild(f)}f.className="";void f.offsetWidth;f.className="fl-"+k}
 {const _f=form;form=function(m){_f(m);app.insertAdjacentHTML("afterbegin",lseg())};
  const _r2=render;render=function(){_r2();if(tab=="a")app.insertAdjacentHTML("afterbegin",lseg());bbHi()}}
 document.addEventListener("pointerdown",e=>{audioCtx();const b=e.target.closest&&e.target.closest(".btn,.chip,.tile,.item,.seg button,.bb button,.spk,.x");if(!b||b.disabled)return;sfx.tap();if(ST.hap!==false&&navigator.vibrate)navigator.vibrate(8)},{passive:true});

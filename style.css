@@ -78,6 +78,6 @@ input:focus-visible{outline:2px solid var(--der);outline-offset:2px}
 .rate .btn[data-v="0"]{color:#dc2626;border-color:rgba(220,38,38,.45)}.rate .btn[data-v="3"]{color:#d97706;border-color:rgba(217,119,6,.45)}
 .rate .btn[data-v="4"]{color:#16a34a;border-color:rgba(22,163,74,.45)}.rate .btn[data-v="5"]{color:#2563eb;border-color:rgba(37,99,235,.45)}
 .rate .btn:hover{background:var(--bg)}.rate small{color:var(--mut)}
-#fl{position:fixed;inset:0;pointer-events:none;z-index:12;opacity:0}#fl.fl-ok{background:rgba(22,163,74,.14);animation:flk .45s ease-out}#fl.fl-no{background:rgba(220,38,38,.16);animation:flk .45s ease-out}
+#flash{position:fixed;inset:0;pointer-events:none;z-index:12;opacity:0}#flash.fl-ok{background:rgba(22,163,74,.14);animation:flk .45s ease-out}#flash.fl-no{background:rgba(220,38,38,.16);animation:flk .45s ease-out}
 @keyframes flk{0%{opacity:1}100%{opacity:0}}
-@media (prefers-reduced-motion:reduce){#fl{animation:none!important}.bb button,.btn,.tile,.item,.seg button,.spk{transition:none!important}}
+@media (prefers-reduced-motion:reduce){#flash{animation:none!important}.bb button,.btn,.tile,.item,.seg button,.spk{transition:none!important}}
