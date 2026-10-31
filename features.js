@@ -84,11 +84,19 @@ async function lbAct(v){
 /* ---- settings ---- */
 function settingsView(){const on=x=>x?"On":"Off",row=(t,d,k,val)=>`<div class="set"><div><b>${t}</b><div class="en" style="font-size:14px">${d}</div></div><button class="btn" data-set="${k}" style="width:auto;min-width:70px">${val}</button></div>`;
  const ss=window.speechSynthesis,nv=ss?ss.getVoices().filter(x=>/^de/i.test(x.lang)):[],ac=AC?AC.state:"not started yet";
- app.innerHTML=seg()+`<div class="box">${row("Sound effects","Short tones for right and wrong answers","snd",on(ST.snd!==false))}${row("Tap feedback","A tiny tick and vibration when you tap (vibration: Android)","hap",on(ST.hap!==false))}${row("Auto-play pronunciation","Speak German when an answer is revealed","auto",on(ST.auto))}${row("Slow speech","Slower, clearer pronunciation","slow",on(ST.slow))}
+ app.innerHTML=seg()+`<div class="box">${row("Sound effects","Short tones for right and wrong answers","snd",on(ST.snd!==false))}${row("Tap feedback","A tiny tick and vibration when you tap (vibration: Android)","hap",on(ST.hap!==false))}${row("Auto-play pronunciation","Speak German when an answer is revealed","auto",on(ST.auto))}${row("Slow speech","Slower, clearer pronunciation","slow",on(ST.slow))}${row("Support with ads","Optional and off by default. Clean, non-intrusive ads help keep this free.","ads",on(ST.ads))}
+ <div class="note"><b>🪙 ${coins()} coins · ❄️ ${(ST.fb||0)-(ST.fu||0)} streak freeze${(ST.fb||0)-(ST.fu||0)==1?"":"s"}</b><div class="en" style="font-size:14px">Earn coins by practicing. A streak freeze protects your streak if you miss a day (max 2).</div><div style="height:8px"></div><button class="btn" data-do="buyfz">Buy a freeze · 50 🪙</button></div>
  <div class="note"><b>Check your audio</b><div class="row" style="margin-top:8px"><button class="btn" data-do="tsnd">Test sound</button><button class="btn" data-do="tvoice">Test German voice</button></div>
  <p class="en" style="font-size:13px;margin:10px 0 0">Sound engine: ${ac}. Speech: ${ss?"supported":"not supported"}. German voices found: ${nv.length?nv.map(x=>esc(x.name)).join(", "):"none"}.</p>
  <p class="en" style="font-size:13px;margin:6px 0 0">No sound? Raise the volume, turn off the iPhone silent switch, and open the site in Safari or Chrome instead of inside another app. No German voice? Install one in your system settings: Android → Text-to-speech → Google → German; iPhone → Accessibility → Spoken Content → Voices → German; Windows → Time &amp; language → Speech.</p></div></div>`}
-function setting(k){ST[k]=k=="snd"?(ST.snd===false):k=="hap"?(ST.hap===false):!ST[k];save();sndBtn();settingsView();if(k=="snd")sfx.good()}
+let USEMIN=0;setInterval(()=>{if(document.visibilityState=="visible")USEMIN+=.5},3e4);
+let adOn=false;function adLoad(){if(adOn||!ST.ads||!AD_CLIENT)return;adOn=true;const s=document.createElement("script");s.async=true;s.crossOrigin="anonymous";s.src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client="+AD_CLIENT;document.head.appendChild(s)}
+function adShow(){if(!ST.ads||!AD_CLIENT||!AD_SLOT)return;adLoad();app.insertAdjacentHTML("beforeend",`<div class="note" style="text-align:center"><span class="en" style="font-size:11px">Ad</span><ins class="adsbygoogle" style="display:block" data-ad-client="${AD_CLIENT}" data-ad-slot="${AD_SLOT}" data-ad-format="auto" data-full-width-responsive="true"></ins></div>`);try{(adsbygoogle=window.adsbygoogle||[]).push({})}catch(e){}}
+function nag(){if(ST.ads||USEMIN<15)return;const l=ST.nag?Date.parse(ST.nag):0;if(Date.now()-l<12096e5)return;ST.nag=day();save();
+ app.insertAdjacentHTML("beforeend",`<div class="note" id="nag"><b>Hey, would you like to support the creator?</b><div class="en" style="font-size:14px">You can turn on ads. They’re clean, optional and off by default.</div><div class="row" style="margin-top:8px"><button class="btn p" data-do="adson">Turn on ads</button><button class="btn" data-do="adlater">Maybe later</button></div></div>`)}
+{const _d3=done;done=function(){_d3();adShow();nag()}}
+adLoad();
+function setting(k){ST[k]=k=="snd"?(ST.snd===false):k=="hap"?(ST.hap===false):!ST[k];save();sndBtn();settingsView();if(k=="snd")sfx.good();if(k=="ads")adLoad()}
 
 /* ---- stories ---- */
 
@@ -144,7 +152,9 @@ async function doTrans(){const x=$("tx").value.trim();if(!x)return;$("to").inner
   ST.tn=(ST.tn||0)+1;save()}
  catch(e){$("to").innerHTML=`<p class="en">Couldn’t translate right now (daily limit reached or no connection). Try again later, or use dict.cc or DeepL.</p>`}}
 function doAct(a,v){
- if(a=="trans")doTrans();
+ if(a=="buyfz"){if((ST.fb||0)-(ST.fu||0)>=2)pop("You already have 2 freezes");else if(coins()<50)pop("Not enough coins yet");else{ST.cs=(ST.cs||0)+50;ST.fb=(ST.fb||0)+1;save();pop("❄️ Streak freeze added");topbar();settingsView()}}
+ else if(a=="adson"){ST.ads=true;save();pop("Thank you! Ads are on");adLoad()}else if(a=="adlater"){const n=$("nag");if(n)n.remove()}
+ else if(a=="trans")doTrans();
  else if(a=="tx"){dtab="t";tdir=/[äöüß]|\b(der|die|das|ich|und|nicht|ist)\b/i.test(v)?"de|en":"en|de";render();$("tx").value=v}
  else if(a=="tsnd"){sfx.level();pop("Playing test sound")}else if(a=="tvoice")speak("Guten Tag! Das ist ein Test.");
  else if(a=="mgstart")mgStart();else if(a=="mgagain")mgSetup()}

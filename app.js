@@ -27,6 +27,7 @@ async function cloud(){
  if(s.exists){const r=JSON.parse(s.data().s);if((r.xp||0)>=ST.xp)ST=Object.assign({},dflt,r)}
  save();$("st").textContent="Progress is saved to your account";topbar();if(!q.length&&tab!="a")render()}catch(e){}
 }
+const coins=()=>(ST.ce||0)-(ST.cs||0);
 const day=d=>(d||new Date()).toISOString().slice(0,10);
 const col=t=>t.replace(/\b(der|die|das)\b/gi,m=>`<span class="${m.toLowerCase()}">${m}</span>`);
 const shuf=a=>{a=a.slice();for(let k=a.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[a[k],a[j]]=[a[j],a[k]]}return a};
@@ -35,20 +36,33 @@ const learned=()=>Object.keys(ST.cards).filter(k=>/^\d+$/.test(k)&&ST.cards[k].r
 const lvl=()=>Math.min(100,Math.floor(ST.xp/150)),stg=l=>l==0?"Level 0":l<=15?"A1":l<=40?"A2":l<=70?"B1":l<100?"B2":"Complete";
 function pop(t){const p=$("pop");p.textContent=t;p.className="";void p.offsetWidth;p.className="go"}
 function topbar(){const n=ST.today.d==day()?ST.today.n:0,p=Math.min(100,n/ST.goal*100);
- $("top").innerHTML=`<span>🔥 ${ST.streak} day${ST.streak==1?"":"s"}</span><div class="bar" style="flex:1;margin:0"><i style="width:${p}%"></i></div><span>${Math.min(n,ST.goal)}/${ST.goal} today</span><span>Lv ${lvl()}</span>`}
+ $("top").innerHTML=`<span>🔥 ${ST.streak} day${ST.streak==1?"":"s"}</span><div class="bar" style="flex:1;margin:0"><i style="width:${p}%"></i></div><span>${Math.min(n,ST.goal)}/${ST.goal} today</span><span>🪙 ${coins()}</span><span>Lv ${lvl()}</span>`}
 function addXP(x){
  const b=lvl(),t=day();ST.xp+=x;gain+=x;
- if(ST.last!=t){const y=day(new Date(Date.now()-864e5));ST.streak=ST.last==y?ST.streak+1:1;ST.last=t}
+ ST.ce=(ST.ce||0)+Math.ceil(x/5);
+ if(ST.last!=t){const gap=ST.last?Math.round((Date.parse(t)-Date.parse(ST.last))/864e5)-1:-1,fz=(ST.fb||0)-(ST.fu||0);
+  if(gap==0)ST.streak++;else if(gap>0&&gap<=fz){ST.fu=(ST.fu||0)+gap;ST.streak++;setTimeout(()=>pop("❄️ A streak freeze saved your streak"),1500)}else ST.streak=1;ST.last=t}
  ST.best=Math.max(ST.best||0,ST.streak);
- if(ST.today.d!=t)ST.today={d:t,n:0};ST.today.n++;
+ if(ST.today.d!=t)ST.today={d:t,n:0};ST.today.n++;if(ST.today.n==ST.goal)ST.ce=(ST.ce||0)+10;
  ST.hist[t]=learned().length;
  pop(lvl()>b?`Level ${lvl()}! +${x} XP`:ST.today.n==ST.goal?`Daily goal reached! +${x} XP`:`+${x} XP`);topbar();
 }
-function sched(c,r){c=Object.assign({ef:2.5,iv:0,reps:0},c);const n=Object.assign({},c);
- if(r==0){n.reps=0;n.iv=0}else{n.reps=c.reps+1;n.iv=n.reps==1?1:n.reps==2?(r==5?4:3):Math.max(1,Math.round(c.iv*c.ef*(r==3?.8:r==5?1.3:1)))}
- n.ef=Math.max(1.3,c.ef+.1-(5-r)*(.08+(5-r)*.02));return n}
-const lab=n=>n.reps==0?"10 min":n.iv==1?"1 day":n.iv+" days";
-function review(k,r){const n=sched(ST.cards[k],r);n.due=Date.now()+(r==0?6e5:n.iv*864e5);ST.cards[k]=n;addXP([2,5,10,15][[0,3,4,5].indexOf(r)])}
+const STEPS=[1,10],RESTEP=[10];
+function sched(c,r){c=Object.assign({ef:2.5,iv:0,reps:0,sp:0,lp:0},c);if(c.st==null)c.st=c.reps>=1&&c.iv>=1?1:0;const n=Object.assign({},c);
+ const grad=d=>{n.st=1;n.iv=d;n.dm=d*1440;n.sp=0;n.reps=c.reps+1};
+ if(c.st==1){
+  if(r==0){n.st=2;n.sp=0;n.lp=c.lp+1;n.ef=Math.max(1.3,c.ef-.2);n.iv=Math.max(1,Math.round(c.iv*.2));n.dm=RESTEP[0]}
+  else{const h=Math.max(c.iv+1,Math.round(c.iv*1.2)),g=Math.max(c.iv+1,Math.round(c.iv*c.ef)),e=Math.max(g+1,Math.round(c.iv*c.ef*1.3));
+   n.iv=r==3?h:r==4?g:e;n.dm=n.iv*1440;n.ef=Math.max(1.3,c.ef+(r==3?-.15:r==5?.15:0));n.reps=c.reps+1}
+ }else{const st=c.st==2?RESTEP:STEPS;
+  if(r==0){n.sp=0;n.dm=st[0]}
+  else if(r==3)n.dm=st.length>1&&c.sp==0?(st[0]+st[1])/2:st[Math.min(c.sp,st.length-1)]*(st.length==1?1.5:1);
+  else if(r==4){if(c.sp+1<st.length){n.sp=c.sp+1;n.dm=st[n.sp]}else grad(c.st==2?Math.max(1,c.iv):1)}
+  else grad(c.st==2?Math.max(1,c.iv)+1:4)}
+ return n}
+const FMT=m=>m<60?Math.round(m)+" min":m<1440?Math.round(m/60)+" h":m<43200?Math.round(m/1440)+(Math.round(m/1440)==1?" day":" days"):m<525600?(Math.round(m/43200*10)/10)+" mo":(Math.round(m/525600*10)/10)+" yr";
+const lab=n=>FMT(n.dm);
+function review(k,r){const n=sched(ST.cards[k],r);n.due=Date.now()+n.dm*6e4;ST.cards[k]=n;addXP([2,5,10,15][[0,3,4,5].indexOf(r)])}
 function readF(){const g=(id,d)=>$(id)?$(id).value:d,f=ST.f;ST.f={r:g("fr",f.r),l:g("fl",f.l),t:g("ft",f.t),n:g("fn",f.n)}}
 function form(msg){
  const f=ST.f,rs=[["0","Any range"]];for(let b=100;b<=1000;b+=100)rs.push([b,`${tab=="w"?"Rank":"Words"} ${b-99}–${b}`]);
