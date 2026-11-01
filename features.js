@@ -102,7 +102,7 @@ function setting(k){ST[k]=k=="snd"?(ST.snd===false):k=="hap"?(ST.hap===false):!S
 
 /* ---- stories ---- */
 
-STORY.forEach((s,k)=>s.e=["☀️","☕","🐕","🏢","✉️"][k]);
+STORY.forEach(s=>{s.e=s.e||({"Mein Tag":"☀️","Im Café":"☕","Der Hund im Park":"🐕","Eine Wohnung suchen":"🏢","Ein Brief an einen Freund":"✉️"})[s.t]||"📖"});
 function readView(){
  if(rs>=0)return storyView();
  app.innerHTML=`<div class="box"><p class="en" style="margin:0 0 10px;font-size:15px">${STORY.length} starter stories written for this site (A1 to B1). Tap a German sentence for its translation, listen, answer a question, then write your own version.</p>
