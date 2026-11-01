@@ -24,7 +24,7 @@ function merge(a,b){
  r.hist=Object.assign({},b.hist);for(const k in (a.hist||{}))r.hist[k]=Math.max(a.hist[k],r.hist[k]||0);
  r.hw=Object.assign({},b.hw);for(const k in (a.hw||{}))r.hw[k]=Math.max(a.hw[k],r.hw[k]||0);
  r.art=Object.assign({},b.art);for(const k in (a.art||{})){const y=r.art[k]||{ok:0,bad:0};r.art[k]={ok:Math.max(a.art[k].ok,y.ok),bad:Math.max(a.art[k].bad,y.bad)}}
- r.f=a.f||b.f||dflt.f;{const keep=k=>k[0]!="w"||(a.wv===2&&a.cards&&a.cards[k])||(b.wv===2&&b.cards&&b.cards[k]);for(const k in r.cards)if(!keep(k))delete r.cards[k];r.wv=2}r.ach=Object.assign({},b.ach,a.ach);r.read=Object.assign({},b.read,a.read);r.dq=Object.assign({},b.dq,a.dq);["nses","built","perfect","mbest","ce","cs","fb","fu","tm","pl1","pl2","pl3","pl4","pl5","plt"].forEach(k=>r[k]=Math.max(a[k]||0,b[k]||0));["snd","auto","slow","lb","nick","ads","nag","casual"].forEach(k=>{r[k]=a[k]!==undefined?a[k]:b[k]});r.dir=a.dir||b.dir;r.goal=a.goal||b.goal||10;return r;
+ r.f=a.f||b.f||dflt.f;{const keep=k=>k[0]!="w"||(a.wv===2&&a.cards&&a.cards[k])||(b.wv===2&&b.cards&&b.cards[k]);for(const k in r.cards)if(!keep(k))delete r.cards[k];r.wv=2}r.ach=Object.assign({},b.ach,a.ach);r.read=Object.assign({},b.read,a.read);r.dq=Object.assign({},b.dq,a.dq);["nses","built","perfect","mbest","ce","cs","fb","fu","tm","pl1","pl2","pl3","pl4","pl5","pl6","pl7","pl8","pl9","pl10","pl11","pl12","plt","plt2"].forEach(k=>r[k]=Math.max(a[k]||0,b[k]||0));["snd","auto","slow","lb","nick","ads","nag","casual"].forEach(k=>{r[k]=a[k]!==undefined?a[k]:b[k]});r.dir=a.dir||b.dir;r.goal=a.goal||b.goal||10;return r;
 }
 function setNote(t){$("st").textContent=t}
 async function push(){
@@ -53,13 +53,13 @@ function modal(m){
  const f=(id,l,t,ac,x)=>`<label for="${id}">${l}</label><input id="${id}" type="${t}" autocomplete="${ac}" required ${x||""}>`;
  const sub=(t)=>`<div style="height:14px"></div><button class="btn p">${t}</button>`;
  const C={
-  login:`<h2>Log in</h2><form data-f="login">${f("ae","Email","email","email")}${f("ap","Password","password","current-password")}${sub("Log in")}</form><p class="lk"><a href="#" data-m="otp">Email me a code instead</a> · <a href="#" data-m="reset">Forgot password?</a></p><p class="lk"><a href="#" data-m="signup">Create account</a></p>`,
+  login:`<h2>Log in</h2><form data-f="login">${f("ae","Email or username","text","username",'autocapitalize="none"')}${f("ap","Password","password","current-password")}${sub("Log in")}</form><p class="lk"><a href="#" data-m="otp">Email me a code instead</a> · <a href="#" data-m="reset">Forgot password?</a></p><p class="lk"><a href="#" data-m="signup">Create account</a></p>`,
   otp:`<h2>Log in with a code</h2><form data-f="otp">${f("ae","Email","email","email")}${sub("Send code")}</form><p class="lk"><a href="#" data-m="login">Back to log in</a></p>`,
   code:`<h2>Enter your code</h2><p class="en" style="font-size:14px">We sent a code to <b>${PEND?esc(PEND.email):""}</b>. Check your inbox (and spam).</p><form data-f="code">${f("cd","Code","text","one-time-code",'inputmode="numeric" maxlength="10"')}${sub("Confirm")}</form><p class="lk"><a href="#" data-x="resend">Send a new code</a></p>`,
   signup:`<h2>Create account</h2><form data-f="signup">${f("un","Username (3–20 letters or numbers)","text","username",'maxlength="20"')}${f("ae","Email (Gmail works)","email","email")}${f("ap","Password (min 6 characters)","password","new-password",'minlength="6"')}${f("ap2","Confirm password","password","new-password",'minlength="6"')}${sub("Send me a code")}</form><p class="lk">Your progress will sync across devices. <a href="#" data-m="login">I already have an account</a></p>`,
   reset:`<h2>Reset password</h2><form data-f="reset">${f("ae","Email","email","email")}${sub("Send reset link")}</form><p class="lk"><a href="#" data-m="login">Back to log in</a></p>`,
   newpass:`<h2>Choose a new password</h2><form data-f="newpass">${f("ap","New password","password","new-password",'minlength="6"')}${sub("Save password")}</form>`,
-  acct:`<h2>Account</h2><p class="en"><b>${USER&&USER.user_metadata&&USER.user_metadata.username?esc(USER.user_metadata.username):""}</b> ${USER?esc(USER.email):""}</p><p class="en" style="font-size:14px">Your progress syncs automatically.</p><div class="row"><button type="button" class="btn" data-x="sync">Sync now</button><button type="button" class="btn" data-x="out">Log out</button></div>`,
+  acct:`<h2>Account</h2><p class="en"><b>${USER&&USER.user_metadata&&USER.user_metadata.username?esc(USER.user_metadata.username):""}</b> ${USER?esc(USER.email):""}</p><div class="note"><b>Your profile</b><div class="en" style="font-size:15px;line-height:1.7">Level ${lvl()} · ${ST.xp} XP<br>🔥 ${ST.streak} day streak · 🪙 ${coins()} coins<br>⏱️ ${fmtT(ST.tm||0)} learning time<br>📚 ${learned().length} sentences learned<br>🎓 A1 exam: ${(ST.plt||0)>=80?"passed 🏆":"not yet"} · A2 exam: ${(ST.plt2||0)>=80?"passed 🏆":"not yet"}</div></div><p class="en" style="font-size:14px">Your progress syncs automatically.</p><div class="row"><button type="button" class="btn" data-x="sync">Sync now</button><button type="button" class="btn" data-x="out">Log out</button></div>`,
   about:ABOUT_HTML,
   privacy:`<h2>Privacy</h2>
 <p><b>On your device.</b> Your progress, settings and achievements are saved in your browser (local storage). Nothing else is stored unless you create an account.</p>
@@ -84,7 +84,7 @@ async function authSubmit(mode){
  msg("Working…");
  try{
   let r;
-  if(mode=="login")r=await sb.auth.signInWithPassword({email:em,password:pw});
+  if(mode=="login"){let lem=em;if(!em.includes("@")){const u=await sb.rpc("email_for_username",{u:em});if(u.error||!u.data)return msg("No account with that username.",true);lem=u.data}r=await sb.auth.signInWithPassword({email:lem,password:pw})}
   else if(mode=="signup"){const un=$("un").value.trim();
    if(!/^[\p{L}\p{N}_.-]{3,20}$/u.test(un))return msg("Username: 3–20 letters, numbers, . _ or -",true);
    if(pw!==$("ap2").value)return msg("Passwords don’t match.",true);
