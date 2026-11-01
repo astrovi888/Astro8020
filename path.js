@@ -63,11 +63,11 @@ function nextId(){for(let n=1;n<=4;n++)if(!bOk(n))return["b"+n,B0[n-1].t];
  if(r1()&&(ST.plt||0)<80)return["x1","A1 exam"];
  for(let n=8;n<=12;n++)if(op(n)&&!ok(n))return[""+n,"Lesson "+n+": "+LS[n-1].t];
  if(r2()&&(ST.plt2||0)<80)return["x2","A2 exam"];return null}
-function home(){const d=4+[1,2,3,4,5,6,7,8,9,10,11,12].filter(ok).length+0,t=[1,2,3,4].filter(bOk).length+[1,2,3,4,5,6,7,8,9,10,11,12].filter(ok).length,n=nextId();
- return `<div class="note"><div style="font-size:15px;line-height:1.5">🤖 Astro: ${coach("hello")}</div><div style="height:10px;background:var(--bd,#333);border-radius:6px;margin:10px 0"><div style="height:10px;width:${Math.round(t/16*100)}%;background:var(--der,#7ab);border-radius:6px"></div></div><div class="en" style="font-size:13px">${t} of 16 lessons done</div>${n?`<button type="button" class="btn p" data-pl="${n[0]}" style="margin-top:10px">▶ Continue: ${n[1]}</button>`:"<p>🏆 You finished every lesson so far. More are coming!</p>"}</div>`}
+function home(){const td=new Date().toISOString().slice(0,10),ci=ST.ci!=td?`<button type="button" class="btn" data-ci="1" style="margin-top:8px">🎁 Daily check-in: +5 🪙</button>`:"";const d=4+[1,2,3,4,5,6,7,8,9,10,11,12].filter(ok).length+0,t=[1,2,3,4].filter(bOk).length+[1,2,3,4,5,6,7,8,9,10,11,12].filter(ok).length,n=nextId();
+ return `<div class="note"><div style="font-size:15px;line-height:1.5">🤖 Astro: ${coach("hello")}</div><div style="height:10px;background:var(--bd,#333);border-radius:6px;margin:10px 0"><div style="height:10px;width:${Math.round(t/16*100)}%;background:var(--der,#7ab);border-radius:6px"></div></div><div class="en" style="font-size:13px">${t} of 16 lessons done</div>${n?`<button type="button" class="btn p" data-pl="${n[0]}" style="margin-top:10px">▶ Continue: ${n[1]}</button>`:"<p>🏆 You finished every lesson so far. More are coming!</p>"}${ci}</div>${window.astroReport?window.astroReport():""}`}
 function begin(title,intro){const P=intro.split("</p>").map(x=>x.trim()).filter(Boolean).map(x=>x+"</p>"),Q=cur.qs.length,seq=[];
  P.forEach((p,k)=>{seq.push({t:p,title});if(k<Q)seq.push({q:k})});for(let k=P.length;k<Q;k++)seq.push({q:k});cur.seq=seq;cur.si=0;cur.title=title;step()}
-function step(){const c=cur,it=c.seq[c.si];if(!it)return end();
+function step(){const c=cur,it=c.seq[c.si];if(!it)return fin();
  if(it.q!==undefined){c.i=it.q;return q()}
  const tn=c.seq.filter(x=>x.t).indexOf(it)+1,tt=c.seq.filter(x=>x.t).length;
  A().innerHTML=`<p class="en" style="font-size:13px">${esc(c.title)} · idea ${tn} of ${tt}</p><p style="font-size:14px">🤖 Astro: ${coach("step")}</p><div class="note" style="font-size:17px;line-height:1.6">${it.t}</div><button type="button" class="btn p" data-pb="tnext">Continue</button>`}
@@ -80,11 +80,19 @@ const rnd=(a,n,not)=>sh(a.filter(y=>y!=not)).slice(0,n);
  else if(k[0]=="w"&&WR[+k.slice(1)]&&WR[+k.slice(1)].en){const w=WR[+k.slice(1)],ws=Object.values(WR).filter(y=>y.en&&y.de!=w.de).map(y=>y.de),o=sh([w.de].concat(rnd(ws,2)));x=[w.en,o,o.indexOf(w.de)]}
  if(x)addMk(x)}}catch(e){}}}
 function lb(n){return `<button type="button" class="btn" data-pl="${n}" ${op(n)?"":"disabled"} style="text-align:left;margin:6px 0">${op(n)?"":"🔒 "}Lesson ${n}: ${LS[n-1].t}${pc(n)?" · "+pc(n)+"%":""}${ok(n)?" ✅":""}</button>`}
-function nd(id,label,st,k){const o=[0,40,0,-40][k%4],c=st=="done"?"#58cc02":st=="open"?"var(--der,#7ab)":"var(--bd,#444)";return `<div style="display:flex;flex-direction:column;align-items:center;transform:translateX(${o}px);margin:8px 0"><button type="button" data-pl="${id}" ${st=="lock"?"disabled":""} style="width:62px;height:62px;border-radius:50%;border:3px solid ${c};background:${st=="done"?"#58cc02":"var(--card,#1c1c1e)"};color:${st=="done"?"#fff":"var(--fg,#fff)"};font-size:22px;padding:0">${st=="done"?"✓":st=="lock"?"🔒":"★"}</button><span style="font-size:12px;max-width:150px;text-align:center;margin-top:4px">${label}</span></div>`}
+function info(id){const b=/^b\d$/.test(id)?B0[id[1]-1]:/^\d+$/.test(id)?LS[id-1]:null,tx=h=>h.replace(/<[^>]+>/g,"").slice(0,230)+"…",n=/^\d+$/.test(id)?+id:0;
+ const title=b?b.t:id=="x1"?"A1 exam":id=="x2"?"A2 exam":"Coming soon",pre=b?tx(b.i):id[0]=="x"?"Mixed questions from every lesson in this level. Pass with 80% to earn the 🏆.":"B1 lessons are on the way.";
+ const st=b?(/^b/.test(id)?"open":ok(n)?"done":op(n)?"open":"lock"):id=="x1"?(r1()?"open":"lock"):id=="x2"?(r2()?"open":"lock"):"lock";
+ A().innerHTML=`<h2>${title}</h2><p class="en">${pre}</p>${b?`<p class="en" style="font-size:13px">${b.q.length} practice questions</p>`:""}`+(st=="lock"&&id!="soon"?`<div class="note">🔒 Locked. Finish the lessons before it, or prove you already know them. A hard test (90% to pass) opens everything up to here at once.</div><button type="button" class="btn p" data-ps="${id}">Take the skip test</button> `:st!="lock"?`<button type="button" class="btn p" data-pl="${id}">${st=="done"?"Review":"Start"}</button> `:"")+`<button type="button" class="btn" data-pb="back">Back</button>`}
+const skipR=id=>/^\d+$/.test(id)?Array.from({length:+id-1},(_,k)=>k+1):id=="x1"?[1,2,3,4,5,6,7]:[1,2,3,4,5,6,7,8,9,10,11,12];
+function skipStart(id){const r=skipR(id).filter(n=>!ok(n));if(!r.length)return view();const pool=[].concat(...r.map(n=>LS[n-1].q));cur={id:"k"+id,qs:sh(pool).slice(0,Math.min(15,Math.max(8,pool.length))),i:0,ok:0,skip:r};q()}
+function fin(){const c=cur;if(c.rq&&c.rq.length&&!/^(mk|ps|pw|k)/.test(c.id)){c.phase=1;return qr()}end()}
+function qr(){const c=cur,x=c.rq[0];A().innerHTML=`<p class="en">🤖 Astro: Let’s fix your mistakes, ${c.rq.length} left. Each one comes back until it sticks.</p><h3>${esc(x[0])}</h3>`+x[1].map((o,k)=>`<button type="button" class="btn" data-po="${k}" style="margin:6px 0">${esc(o)}</button>`).join("")}
+function nd(id,label,st,k){const o=[0,40,0,-40][k%4],c=st=="done"?"#58cc02":st=="open"?"var(--der,#7ab)":"var(--bd,#444)";return `<div style="display:flex;flex-direction:column;align-items:center;transform:translateX(${o}px);margin:8px 0"><button type="button" data-pk="${id}" style="width:62px;height:62px;border-radius:50%;border:3px solid ${c};background:${st=="done"?"#58cc02":"var(--card,#1c1c1e)"};color:${st=="done"?"#fff":"var(--fg,#fff)"};font-size:22px;padding:0">${st=="done"?"✓":st=="lock"?"🔒":"★"}</button><span style="font-size:12px;max-width:150px;text-align:center;margin-top:4px">${label}</span></div>`}
 function sec(t,nodes){return `<h3 style="margin:18px 0 4px">${t}</h3><div style="background:linear-gradient(var(--bd,#333),var(--bd,#333)) center/2px 100% no-repeat;padding:4px 0">${nodes.join("")}</div>`}
 function view(){const st=n=>ok(n)?"done":op(n)?"open":"lock";
  let h=`<h2>🎓 Learning Path</h2>${home()}${mkn()>=MKL?`<div class="note"><b>⚠️ You have ${mkn()} mistakes.</b> Fix some of them before moving on, so they don’t pile up.</div>`:""}`;
- h+=sec("🌱 Start here (A0)",B0.map((l,k)=>nd("b"+(k+1),l.t,bOk(k+1)?"done":(k==0||bOk(k))?"open":"lock",k)));
+ h+=sec("🌱 Start here (A0)",B0.map((l,k)=>nd("b"+(k+1),l.t,bOk(k+1)?"done":"open",k)));
  h+=sec("A1 · Beginner",[1,2,3,4,5,6,7].map((n,k)=>nd(""+n,LS[n-1].t,st(n),k)).concat([nd("x1","A1 exam",(ST.plt||0)>=80?"done":r1()?"open":"lock",7)]));
  h+=sec("A2 · Elementary",[8,9,10,11,12].map((n,k)=>nd(""+n,LS[n-1].t,st(n),k)).concat([nd("x2","A2 exam",(ST.plt2||0)>=80?"done":r2()?"open":"lock",5)]));
  h+=sec("B1 · Intermediate",[nd("soon","Coming soon","lock",0)]);
@@ -98,12 +106,16 @@ function prac(kind){let it=[];
  cur={id:kind,qs,i:0,ok:0};q()}
 function q(){const c=cur,x=c.qs[c.i];A().innerHTML=`<p class="en">Question ${c.i+1} of ${c.qs.length}</p><h3>${esc(x[0])}</h3>`+x[1].map((o,k)=>`<button type="button" class="btn" data-po="${k}" style="margin:6px 0">${esc(o)}</button>`).join("")}
 function end(){const c=cur,p=Math.round(c.ok/c.qs.length*100),pass=p>=80;
+ if(c.skip){const w=p>=90;if(w){c.skip.forEach(n=>{ST["pl"+n]=Math.max(pc(n),80)});if(c.skip.some(n=>n>=8)||c.id=="kx2"||/^k\d+$/.test(c.id)&&+c.id.slice(1)>=8)ST.plt=Math.max(ST.plt||0,80);save()}
+  return A().innerHTML=`<h2>${w?"🚀 Skipped ahead!":"Not this time"}</h2><p>🤖 Astro: ${w?"You really do know this stuff. Everything up to there is unlocked.":"You got "+p+"%. You need 90% to skip. No shame, the lessons will get you there."}</p><button type="button" class="btn" data-pb="back">Back to Path</button>`}
  if(c.id=="mk"){addXP(c.ok*3);save();return A().innerHTML=`<h2>Mistakes fixed: ${c.ok}/${c.qs.length}</h2><p>${mkn()} left to fix.</p><button type="button" class="btn" data-pl="mk">More mistakes</button> <button type="button" class="btn" data-pb="back">Back to Path</button>`}
  if(c.id=="ps"||c.id=="pw"){addXP(c.ok*2);save();return A().innerHTML=`<h2>Practice done</h2><p>You got <b>${c.ok}/${c.qs.length}</b> right. Keep going!</p><button type="button" class="btn" data-pb="retry2">Practice again</button> <button type="button" class="btn" data-pb="back">Back to Path</button>`}
  if(c.id=="x1")ST.plt=Math.max(ST.plt||0,p);else if(c.id=="x2")ST.plt2=Math.max(ST.plt2||0,p);else if(c.id[0]=="b")ST[c.id]=Math.max(ST[c.id]||0,p);else if(c.id[0]=="d")ST["dg"+c.id.slice(1)]=Math.max(ST["dg"+c.id.slice(1)]||0,p);else ST["pl"+c.id]=Math.max(pc(c.id),p);
- addXP(pass?20:5);save();
- A().innerHTML=`<h2>${pass?(c.id[0]=="d"?"✅ Dialogue learned!":"✅ Passed!"):"Not quite yet"}</h2><p>🤖 Astro: ${coach(pass?"pass":"fail")}</p><p>You scored <b>${p}%</b> (${c.ok}/${c.qs.length}). You need 80% to pass.</p>${pass?"":`<button type="button" class="btn" data-pb="retry">Try again</button> `}<button type="button" class="btn" data-pb="back">Back to Path</button>`}
-document.addEventListener("click",e=>{if(tab!="l")return;const t=e.target.closest("[data-pl],[data-po],[data-pb],[data-pm]");if(!t)return;
+ addXP(pass?20:5);const ck=","+c.id+",",cn=pass&&!(ST.cgs||"").includes(ck)?(c.id[0]=="x"?25:10):0;if(cn){ST.cgs=(ST.cgs||"")+ck;ST.ce=(ST.ce||0)+cn;topbar()}save();
+ A().innerHTML=`<h2>${pass?(c.id[0]=="d"?"✅ Dialogue learned!":"✅ Passed!"):"Not quite yet"}</h2><p>🤖 Astro: ${coach(pass?"pass":"fail")}${cn?` <b>+${cn} 🪙</b>`:""}</p><p>You scored <b>${p}%</b> (${c.ok}/${c.qs.length}). You need 80% to pass.</p>${pass?"":`<button type="button" class="btn" data-pb="retry">Try again</button> `}<button type="button" class="btn" data-pb="back">Back to Path</button>`}
+document.addEventListener("click",e=>{if(tab!="l")return;const t=e.target.closest("[data-pl],[data-po],[data-pb],[data-pm],[data-pk],[data-ps],[data-ci]");if(!t)return;
+ if(t.dataset.pk)return info(t.dataset.pk);if(t.dataset.ps)return skipStart(t.dataset.ps);
+ if(t.dataset.ci){ST.ci=new Date().toISOString().slice(0,10);ST.ce=(ST.ce||0)+5;save();topbar();return view()}
  if(t.dataset.pl){const id=t.dataset.pl;if(id=="mk"){const n=mkn();A().innerHTML=n?`<h2>❌ My mistakes</h2><p>${n} to fix. Get one right and it disappears.</p>`+[5,10,15,20].map(c=>`<button type="button" class="btn" data-pm="${c}" style="margin:6px 0">Fix ${Math.min(c,n)} mistake${Math.min(c,n)==1?"":"s"}</button>`).join("")+`<button type="button" class="btn" data-pb="back">Back</button>`:`<h2>No mistakes 🎉</h2><p>Wrong answers from lessons, quizzes and the Learn tab collect here.</p><button type="button" class="btn" data-pb="back">Back</button>`}
   else if(id=="dl")A().innerHTML=`<h2>💬 Dialogues</h2><p class="en">Read, listen, then complete the missing words. Pass (80%) to mark it learned.</p>`+DG.map((d,k)=>`<button type="button" class="btn" data-pl="d${k+1}" style="text-align:left;margin:6px 0">${d.l} · ${d.t}${dgOk(k+1)?" ✅ learned":""}</button>`).join("")+`<button type="button" class="btn" data-pb="back">Back</button>`
   else if(/^d\d+$/.test(id)&&DG[id.slice(1)-1]){const d=DG[id.slice(1)-1];cur={id,qs:d.q,i:0,ok:0};A().innerHTML=`<h2>${d.t}</h2><p class="en">${d.l}</p>`+d.L.map(x=>`<p><b>${esc(x[0])}:</b> ${esc(x[1])} ${typeof spk=="function"?spk(x[1]):""}<br><span class="en" style="font-size:14px">${esc(x[2])}</span></p>`).join("")+`<button type="button" class="btn p" data-pb="start">Practice this dialogue</button> <button type="button" class="btn" data-pl="dl">Back</button>`}
@@ -111,12 +123,12 @@ document.addEventListener("click",e=>{if(tab!="l")return;const t=e.target.closes
   else if(id=="ps"||id=="pw")prac(id);else if(id[0]=="x"){const lo=id=="x1"?0:7,hi=id=="x1"?7:12,pool=[].concat(...LS.slice(lo,hi).map(l=>l.q));cur={id,qs:sh(pool).slice(0,10),i:0,ok:0};q()}
   else{const l=LS[id-1];cur={id,qs:l.q,i:0,ok:0};begin(`Lesson ${id}: ${l.t}`,l.i)}}
  else if(t.dataset.pm){const qs=sh(Object.values(mk()).map(m=>m.q)).slice(0,+t.dataset.pm);cur={id:"mk",qs,i:0,ok:0};q()}
- else if(t.dataset.po!==undefined&&cur){const x=cur.qs[cur.i],k=+t.dataset.po,g=k==x[2];if(g){cur.ok++;sfx.good&&sfx.good();if(cur.id=="mk"){delete mk()[mkid(x)];save()}}else if(cur.id!="mk")addMk(x);
-  A().innerHTML=`<h3>${esc(x[0])}</h3><p>${g?"✅ ":"❌ "}${coach(g?"right":"wrong")}</p>${g?"":`<p>Answer: <b>${esc(x[1][x[2]])}</b></p>`}<button type="button" class="btn p" data-pb="next">${cur.i+1<cur.qs.length?"Next":"See result"}</button>`}
+ else if(t.dataset.po!==undefined&&cur){const x=cur.phase?cur.rq[0]:cur.qs[cur.i],k=+t.dataset.po,g=k==x[2];if(g){if(!cur.phase)cur.ok++;sfx.good&&sfx.good();if(cur.id=="mk"||cur.phase){delete mk()[mkid(x)];save()}if(cur.phase)cur.rq.shift()}else{if(cur.phase)cur.rq.push(cur.rq.shift());else if(cur.id!="mk"){addMk(x);(cur.rq=cur.rq||[]).push(x)}}
+  A().innerHTML=`<h3>${esc(x[0])}</h3><p>${g?"✅ ":"❌ "}${coach(g?"right":"wrong")}</p>${g?"":`<p>Answer: <b>${esc(x[1][x[2]])}</b></p>`}<button type="button" class="btn p" data-pb="next">${cur.phase||cur.i+1<cur.qs.length?"Next":"See result"}</button>`}
  else if(t.dataset.pb=="start"||t.dataset.pb=="retry"){cur.i=0;cur.ok=0;cur.seq=null;q()}
  else if(t.dataset.pb=="retry2"){prac(cur.id)}
  else if(t.dataset.pb=="tnext"){cur.si++;step()}
- else if(t.dataset.pb=="next"){if(cur.seq){cur.si++;step()}else{cur.i++;cur.i<cur.qs.length?q():end()}}
+ else if(t.dataset.pb=="next"){if(cur.phase){cur.rq.length?qr():end()}else if(cur.seq){cur.si++;step()}else{cur.i++;cur.i<cur.qs.length?q():fin()}}
  else if(t.dataset.pb=="back"){cur=null;view()}});
 const _r=render;render=function(){if(tab=="l"){topbar();cur=null;view();document.querySelectorAll("#bbar button").forEach(b=>b.classList.toggle("on",b.dataset.g=="l"));return}_r()};
 const bb=document.getElementById("bbar");if(bb)bb.insertAdjacentHTML("beforeend",'<button data-g="l"><i>🎓</i>Path</button>');

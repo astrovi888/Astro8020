@@ -164,7 +164,7 @@ function doAct(a,v){
 /* ---- Word Match Blitz ---- */
 let MG=null;
 const eshort=w=>w.en.split(/[;(,]/)[0].trim();
-const mgPool=()=>WD.filter(w=>w.rank<=500&&"nvjdm".includes(w.pos)&&eshort(w).length<=20);
+let mgPool=()=>WD.filter(w=>w.rank<=500&&"nvjdm".includes(w.pos)&&eshort(w).length<=20);
 function mgStop(){if(MG&&MG.iv)clearInterval(MG.iv);MG=null}
 function mgNew(){const u=new Set(MG.L.map(x=>x.rank)),e=new Set(MG.R.map(eshort));for(let n=0;n<200;n++){const w=MG.pool[Math.floor(Math.random()*MG.pool.length)];if(!u.has(w.rank)&&!e.has(eshort(w)))return w}return MG.pool[0]}
 async function mgBoard(){if(!sb)return`<p class="en">The online leaderboard isn’t switched on yet.</p>`;
@@ -175,17 +175,17 @@ async function mgSubmit(sc){if(!sb||!USER||!ST.lb||!ST.nick||sc<1)return false;
  try{const r=await sb.from("match_scores").select("score").eq("user_id",USER.id).maybeSingle();if(r.error)throw r.error;
   if(!r.data||sc>r.data.score){const w=await sb.from("match_scores").upsert({user_id:USER.id,name:ST.nick,score:sc,updated_at:new Date().toISOString()});if(w.error)throw w.error}return true}catch(e){return false}}
 function mgSetup(){mgStop();
- app.innerHTML=`<div class="box"><h2 style="margin:0 0 6px;font-size:22px">Word Match Blitz ⏱️</h2><p class="en" style="margin:0 0 10px">60 seconds. Match each German word with its English meaning. Every pair scores a point and a wrong match costs 2 seconds. Words come from the 500 most common German words.</p>
+ app.innerHTML=`<div class="box"><h2 style="margin:0 0 6px;font-size:22px">Word Match Blitz ⏱️</h2><p class="en" style="margin:0 0 10px">${ST.mt||60} seconds. Match each German word with its English meaning. Every pair scores a point and a wrong match costs 2 seconds. Words come from the 500 most common German words.</p>
  <div class="meta"><span>Your best</span><b style="color:var(--fg)">${ST.mbest||0}</b></div><div style="height:14px"></div><button class="btn p" data-do="mgstart">Start</button></div>
  <div class="box" style="margin-top:12px"><b>Top 10 worldwide</b><div id="mgb"><p class="en">Loading…</p></div>${sb&&!(ST.lb&&ST.nick)?`<p class="en" style="font-size:13px;margin:10px 0 0">To post your score, log in and join the leaderboard under Progress → Ranks.</p>`:""}</div>`;
  mgBoard().then(h=>{const el=$("mgb");if(el&&tab=="m"&&!MG)el.innerHTML=h})}
-function mgStart(){mgStop();MG={pool:mgPool(),L:[],R:[],sel:null,score:0,end:Date.now()+60000,done:false,iv:0};
+function mgStart(){mgStop();MG={pool:mgPool(),L:[],R:[],sel:null,score:0,end:Date.now()+(ST.mt||60)*1000,done:false,iv:0};
  for(let k=0;k<6;k++){const w=mgNew();MG.L.push(w);MG.R.push(w)}MG.R=shuf(MG.R);
  app.innerHTML=`<div class="box"><div class="meta"><span>Matched <b id="ms" style="color:var(--fg)">0</b></span><span id="mt">60s</span></div><div class="bar"><i id="mgbar" style="width:100%;animation:none"></i></div><div id="mgg" class="mg"></div></div>`;
  mgGrid();MG.iv=setInterval(mgTick,200)}
 function mgGrid(){const sl=(s,k)=>MG.sel&&MG.sel[0]==s&&MG.sel[1]==k?" sel":"";
  $("mgg").innerHTML=`<div>${MG.L.map((w,k)=>`<button class="tile${sl("L",k)}" data-mg="L${k}">${w.art?`<span class="${w.art}">${w.art}</span> `:""}${w.de}</button>`).join("")}</div><div>${MG.R.map((w,k)=>`<button class="tile${sl("R",k)}" data-mg="R${k}">${esc(eshort(w))}</button>`).join("")}</div>`}
-function mgTick(){if(!MG||MG.done)return;const left=Math.max(0,(MG.end-Date.now())/1000),t=$("mt"),b=$("mgbar");if(t)t.textContent=Math.ceil(left)+"s";if(b)b.style.width=Math.min(100,left/60*100)+"%";if(left<=0)mgEnd()}
+function mgTick(){if(!MG||MG.done)return;const left=Math.max(0,(MG.end-Date.now())/1000),t=$("mt"),b=$("mgbar");if(t)t.textContent=Math.ceil(left)+"s";if(b)b.style.width=Math.min(100,left/(ST.mt||60)*100)+"%";if(left<=0)mgEnd()}
 function mgTap(s,k){if(!MG||MG.done)return;
  if(!MG.sel||MG.sel[0]==s){MG.sel=[s,k];return mgGrid()}
  const a=MG.sel[0]=="L"?MG.sel[1]:k,b=MG.sel[0]=="L"?k:MG.sel[1];MG.sel=null;
