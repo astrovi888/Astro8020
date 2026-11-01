@@ -100,25 +100,60 @@ function nag(){if(ST.ads||USEMIN<15)return;const l=ST.nag?Date.parse(ST.nag):0;i
 adLoad();
 function setting(k){ST[k]=k=="snd"?(ST.snd===false):k=="hap"?(ST.hap===false):!ST[k];save();sndBtn();settingsView();if(k=="snd")sfx.good();if(k=="ads")adLoad()}
 
-/* ---- stories ---- */
+/* ---- stories: level -> story list -> story ---- */
 
-STORY.forEach(s=>{s.e=s.e||({"Mein Tag":"☀️","Im Café":"☕","Der Hund im Park":"🐕","Eine Wohnung suchen":"🏢","Ein Brief an einen Freund":"✉️"})[s.t]||"📖"});
+let rl="",QZ={};
+const RLV=[["A1","Beginner","Simple everyday sentences"],["A2","Elementary","Short stories about daily life"],["B1","Intermediate","Longer texts, opinions and mysteries"],["B2","Upper intermediate","Complex ideas and suspense"]];
+const READ_LINKS=`<div class="note"><b>Free graded reading elsewhere</b><div class="lk lib"><a href="https://www.inklingo.app/german/stories" target="_blank" rel="noopener">Inklingo</a> – graded stories A0–B2 with audio and quizzes<a href="https://www.lenguia.com/stories/german" target="_blank" rel="noopener">Lenguia</a> – free graded German stories<a href="https://learngerman.dw.com/" target="_blank" rel="noopener">DW Learn German</a> – courses and stories, A1–C1<a href="https://slowgerman.com/" target="_blank" rel="noopener">Slow German</a> – clearly spoken texts with transcripts<a href="https://www.nachrichtenleicht.de/" target="_blank" rel="noopener">Nachrichtenleicht</a> – news in simple German<a href="https://www.langcen.cam.ac.uk/resources/langg/ge_data/ge_640.html" target="_blank" rel="noopener">Cambridge Language Centre</a> – open-access B1 reader with audio<a href="https://www.projekt-gutenberg.org/" target="_blank" rel="noopener">Projekt Gutenberg-DE</a> – public-domain classics (advanced)</div><p class="en" style="font-size:13px;margin:8px 0 0">These are independent sites. Their texts belong to their authors, so we link to them instead of copying them.</p></div>`;
+
+// The new story files sometimes split one quotation across two sentences. Join them back together.
+function fixQuotes(list){const out=[],open=t=>(t.match(/„/g)||[]).length-(t.match(/[“"]/g)||[]).length;
+ for(let i=0;i<list.length;i++){let d=list[i][0],e=list[i][1],n=0;
+  while(open(d)>0&&i+1<list.length&&n<3){i++;d+=" "+list[i][0];e+=" "+list[i][1];n++}
+  out.push([d.replace(/"/g,"“"),e])}
+ return out}
+
+// Legacy stories (q/w format) get the same shape as the new ones (qs list).
+STORY.forEach(s=>{s.e=s.e||({"Mein Tag":"☀️","Im Café":"☕","Der Hund im Park":"🐕","Eine Wohnung suchen":"🏢","Ein Brief an einen Freund":"✉️"})[s.t]||"📖";s.legacy=1;s.qs=s.q?[{q:s.q[0],o:s.q[1],a:0}]:[]});
+(function(){const nw=(window.NEWSTORY||[]).map(n=>({id:n.id,t:n.t,l:n.l,e:n.e||"📖",cat:n.cat||"",pron:n.pron||"",min:n.min||0,s:fixQuotes(n.s||[]),v:n.v||[],qs:n.qs||[]})),ts={};
+ nw.forEach(n=>ts[n.t]=1);
+ for(let i=STORY.length-1;i>=0;i--)if(ts[STORY[i].t])STORY.splice(i,1);   // new version replaces an old story with the same title
+ STORY.push(...nw);
+ const o="A1A2B1B2";STORY.sort((a,b)=>o.indexOf(a.l)-o.indexOf(b.l)||(a.legacy?1:0)-(b.legacy?1:0))})();
+
+const rdone=s=>!!(ST.read&&ST.read[s.t]);
 function readView(){
  if(rs>=0)return storyView();
- app.innerHTML=`<div class="box"><p class="en" style="margin:0 0 10px;font-size:15px">${STORY.length} starter stories written for this site (A1 to B1). Tap a German sentence for its translation, listen, answer a question, then write your own version.</p>
- ${STORY.map((s,k)=>`<button class="item" data-st="${k}"><span><b>${s.e} ${s.t}</b><span class="en" style="display:block;font-size:14px">${s.s.length} sentences</span></span><span class="tg">${s.l}${ST.read&&ST.read[s.t]?" ✓":""}</span></button>`).join("")}
- <div class="note"><b>Free graded reading elsewhere</b><div class="lk lib"><a href="https://www.inklingo.app/german/stories" target="_blank" rel="noopener">Inklingo</a> – graded stories A0–B2 with audio and quizzes<a href="https://www.lenguia.com/stories/german" target="_blank" rel="noopener">Lenguia</a> – free graded German stories<a href="https://learngerman.dw.com/" target="_blank" rel="noopener">DW Learn German</a> – courses and stories, A1–C1<a href="https://slowgerman.com/" target="_blank" rel="noopener">Slow German</a> – clearly spoken texts with transcripts<a href="https://www.nachrichtenleicht.de/" target="_blank" rel="noopener">Nachrichtenleicht</a> – news in simple German<a href="https://www.langcen.cam.ac.uk/resources/langg/ge_data/ge_640.html" target="_blank" rel="noopener">Cambridge Language Centre</a> – open-access B1 reader with audio<a href="https://www.projekt-gutenberg.org/" target="_blank" rel="noopener">Projekt Gutenberg-DE</a> – public-domain classics (advanced)</div><p class="en" style="font-size:13px;margin:8px 0 0">These are independent sites. Their texts belong to their authors, so we link to them instead of copying them.</p></div></div>`}
-function storyView(){const s=STORY[rs],full=s.s.map(x=>x[0]).join(" ");
- app.innerHTML=`<div class="box"><div class="meta"><button class="chip" data-st="-1" style="margin:0">← Stories</button><span class="tg">${s.l}</span></div>
- <h2 style="margin:14px 0 4px;font-size:22px">${s.e} ${s.t}</h2><div style="margin-bottom:6px">${spk(full)}<span class="en" style="font-size:13px"> whole story</span></div>
+ if(rl)return levelView();
+ app.innerHTML=`<div class="box"><p class="en" style="margin:0 0 12px;font-size:15px">${STORY.length} stories in four levels. Pick a level, open a story, tap any German sentence for its translation, listen, answer the questions.</p>
+ ${RLV.map(([l,n,d])=>{const L=STORY.filter(s=>s.l==l),k=L.filter(rdone).length;
+  return `<button class="item" data-rl="${l}"><span style="flex:1;min-width:0"><b style="font-size:22px">${l}</b> <b style="font-size:16px">· ${n}</b><span class="en" style="display:block;font-size:14px">${d}</span><span class="bar" style="display:block;margin:10px 0 4px"><i style="width:${L.length?Math.round(k/L.length*100):0}%"></i></span><span class="en" style="display:block;font-size:13px">${k} of ${L.length} stories read</span></span><span class="tg" style="margin:0 0 0 10px">›</span></button>`}).join("")}
+ ${READ_LINKS}</div>`}
+function levelView(){const m=RLV.find(x=>x[0]==rl),L=STORY.map((s,k)=>[s,k]).filter(x=>x[0].l==rl),k=L.filter(x=>rdone(x[0])).length;
+ app.innerHTML=`<div class="box"><div class="meta"><button class="chip" data-rl="" style="margin:0">← Levels</button><span class="tg">${k}/${L.length} read</span></div>
+ <h2 style="margin:14px 0 4px;font-size:22px">${rl} · ${m[1]}</h2><p class="en" style="margin:0 0 12px;font-size:14px">${m[2]}</p>
+ ${L.map(([s,i])=>`<button class="item" data-st="${i}"><span style="min-width:0"><b>${s.e} ${esc(s.t)}</b><span class="en" style="display:block;font-size:13px">${s.cat?esc(s.cat)+" · ":""}${s.s.length} sentences${s.min?" · "+s.min+" min":""}</span></span><span class="tg" style="margin:0 0 0 10px">${rdone(s)?"✓":"›"}</span></button>`).join("")}</div>`}
+function storyView(){const s=STORY[rs],full=s.s.map(x=>x[0]).join(" ");QZ={ok:{}};
+ const quiz=s.qs.length?`<div class="note" id="qz"><b>Check your understanding</b>${s.qs.map((q,i)=>`<div id="q${i}" style="margin:12px 0"><p style="margin:6px 0">${i+1}. ${esc(q.q)}</p>${shuf(q.o.map((t,k)=>[t,k])).map(([t,k])=>`<button class="btn" style="margin:4px 0;text-align:left" data-qa="${i}:${k}">${esc(t)}</button>`).join("")}<div id="qr${i}"></div></div>`).join("")}<div id="qd"></div></div>`
+  :`<div class="note"><b>Finished reading?</b><div id="qd" style="margin-top:8px">${rdone(s)?`<p style="margin:0"><b>✓ Read.</b></p>`:`<button class="btn p" data-mr="1">Mark as read (+15 XP)</button>`}</div></div>`;
+ const vocab=s.v&&s.v.length?`<details class="note"><summary><b>Key words and grammar (${s.v.length})</b></summary>${s.v.map(w=>`<div style="margin:10px 0"><b>${esc(w[0])}</b> <button class="spk" data-say="${esc(w[0])}" aria-label="Play word">🔊</button> <span class="en">= ${esc(w[2]||"")}</span>${w[1]?`<div class="en" style="font-size:13px">${esc(w[1])}</div>`:""}</div>`).join("")}</details>`:"";
+ const pron=s.pron?`<details class="note"><summary><b>🎙️ Pronunciation tip</b></summary><p class="en" style="font-size:15px;margin:8px 0 0">${esc(s.pron)}</p></details>`:"";
+ const wr=s.w?s.w[0]:"Write 3–5 sentences in German: what happened in this story, or tell it in your own words.";
+ app.innerHTML=`<div class="box"><div class="meta"><button class="chip" data-st="-1" style="margin:0">← ${s.l} stories</button><span class="tg">${s.l}${s.min?" · "+s.min+" min":""}</span></div>
+ <h2 style="margin:14px 0 4px;font-size:22px">${s.e} ${esc(s.t)}</h2>${s.cat?`<p class="en" style="margin:0 0 8px;font-size:13px">${esc(s.cat)}</p>`:""}<div style="margin-bottom:6px">${spk(full)}<span class="en" style="font-size:13px"> whole story</span></div>
  ${s.s.map((x,k)=>`<div class="ln"><span class="de" data-tr="${k}" role="button" tabindex="0">${col(esc(x[0]))}</span> <button class="spk" data-say="${esc(x[0])}" aria-label="Play sentence">🔊</button><div id="tr${k}" class="en hide" style="font-size:16px">${esc(x[1])}</div></div>`).join("")}
+ ${pron}${vocab}
  <div class="note"><b>Words you know here</b>${gloss(full)||`<p class="en" style="font-size:14px;margin:4px 0 0">None from the word list yet.</p>`}</div>
- <div class="note" id="qz"><b>Check your understanding</b><p style="margin:6px 0">${s.q[0]}</p>${shuf(s.q[1].map((t,k)=>[t,k])).map(([t,k])=>`<button class="btn" style="margin:4px 0;text-align:left" data-qa="${k}">${t}</button>`).join("")}<div id="qr"></div></div>
- <div class="note"><b>Now write</b><p class="en" style="margin:6px 0;font-size:15px">${s.w[0]}</p><textarea id="wr" rows="5" placeholder="Schreib hier auf Deutsch…" style="width:100%;font:inherit;background:var(--card);color:var(--fg);border:1px solid var(--bd);border-radius:10px;padding:10px"></textarea><div style="height:8px"></div><button class="btn" data-rd="model">Show a model answer</button><div id="wm" class="hide"></div></div></div>`}
-function quizAns(k){const s=STORY[rs];
- if(k==0){sfx.good();if(!(ST.read&&ST.read[s.t])){ST.read=ST.read||{};ST.read[s.t]=day();addXP(15)}save();
-  $("qz").querySelectorAll("[data-qa]").forEach(b=>b.disabled=true);$("qr").innerHTML=`<p style="margin:8px 0 0"><b>Richtig!</b> Story complete.</p>`}
- else{sfx.bad();$("qr").innerHTML=`<p class="en" style="margin:8px 0 0">Not quite. Read the story again and try another answer.</p>`}}
+ ${quiz}
+ <div class="note"><b>Now write</b><p class="en" style="margin:6px 0;font-size:15px">${esc(wr)}</p><textarea id="wr" rows="5" placeholder="Schreib hier auf Deutsch…" style="width:100%;font:inherit;background:var(--card);color:var(--fg);border:1px solid var(--bd);border-radius:10px;padding:10px"></textarea>${s.w?`<div style="height:8px"></div><button class="btn" data-rd="model">Show a model answer</button><div id="wm" class="hide"></div>`:""}</div></div>`}
+function storyDone(){const s=STORY[rs],first=!rdone(s);
+ if(first){ST.read=ST.read||{};ST.read[s.t]=day();addXP(15)}save();
+ $("qd").innerHTML=`<p style="margin:8px 0 0"><b>Story complete!</b>${first?" +15 XP":""}</p>`}
+function quizAns(i,k){const s=STORY[rs],q=s.qs[i],b=document.querySelector(`[data-qa="${i}:${k}"]`);if(QZ.ok[i]||!b)return;
+ if(k==q.a){sfx.good();QZ.ok[i]=1;document.querySelectorAll(`#q${i} [data-qa]`).forEach(x=>x.disabled=true);b.style.borderColor="var(--das)";
+  $("qr"+i).innerHTML=`<p style="margin:8px 0 0"><b>Richtig!</b>${q.e?` <span class="en" style="font-size:14px">${esc(q.e)}</span>`:""}</p>`;
+  if(s.qs.every((_,j)=>QZ.ok[j]))storyDone()}
+ else{sfx.bad();b.disabled=true;b.style.opacity=".55";b.style.borderColor="#dc2626";$("qr"+i).innerHTML=`<p class="en" style="margin:8px 0 0">Not quite. Read the story again and try another answer.</p>`}}
 
 /* ---- dictionary, translator, ranked top-1000 list ---- */
 let dtab="l",tdir="en|de",bsel={r:"100",l:"0",p:"0"};
@@ -207,9 +242,11 @@ document.addEventListener("click",e=>{let b;const t=e.target;
  else if(b=t.closest("[data-lb]")){e.preventDefault();lbAct(b.dataset.lb)}
  else if(b=t.closest("[data-st]")){rs=+b.dataset.st;readView();window.scrollTo&&scrollTo(0,0)}
  else if(b=t.closest("[data-tr]")){$("tr"+b.dataset.tr).classList.toggle("hide");sfx.tap()}
- else if(b=t.closest("[data-qa]"))quizAns(+b.dataset.qa);
- else if(b=t.closest("[data-lt]")){tab=b.dataset.lt;rs=-1;mgStop();render();window.scrollTo&&scrollTo(0,0)}
- else if(b=t.closest("[data-g]")){tab=b.dataset.g=="s"&&grp(tab)=="s"?tab:b.dataset.g;rs=-1;mgStop();render();window.scrollTo&&scrollTo(0,0)}
+ else if(b=t.closest("[data-qa]")){const p=b.dataset.qa.split(":");quizAns(+p[0],+p[1])}
+ else if(b=t.closest("[data-mr]")){sfx.good();storyDone()}
+ else if(b=t.closest("[data-rl]")){rl=b.dataset.rl;rs=-1;readView();window.scrollTo&&scrollTo(0,0)}
+ else if(b=t.closest("[data-lt]")){tab=b.dataset.lt;rs=-1;rl="";mgStop();render();window.scrollTo&&scrollTo(0,0)}
+ else if(b=t.closest("[data-g]")){tab=b.dataset.g=="s"&&grp(tab)=="s"?tab:b.dataset.g;rs=-1;rl="";mgStop();render();window.scrollTo&&scrollTo(0,0)}
  else if(b=t.closest("[data-dt]")){dtab=b.dataset.dt;render()}
  else if(b=t.closest("[data-td]")){tdir=b.dataset.td;transView()}
  else if(b=t.closest("[data-mg]"))mgTap(b.dataset.mg[0],+b.dataset.mg.slice(1));
@@ -219,7 +256,7 @@ document.addEventListener("keydown",e=>{if((e.key=="Enter"||e.key==" ")&&e.targe
 document.addEventListener("input",e=>{if(e.target.id!="dq")return;dres(e.target.value);clearTimeout(dt);
  dt=setTimeout(()=>{const x=nz(e.target.value.trim());if(x.length>=3&&dsearch(x).w.length){ST.dq=ST.dq||{};if(Object.keys(ST.dq).length<400){ST.dq[x]=1;save();checkAch()}}},1000)});
 document.addEventListener("change",e=>{if(e.target.id=="bb"||e.target.id=="bl"||e.target.id=="bp"){bsel={r:$("bb").value,l:$("bl").value,p:$("bp").value};dbrowse()}});
-$("nav").addEventListener("click",e=>{if(e.target.closest("[data-t]")){rs=-1;mgStop()}},true);
+$("nav").addEventListener("click",e=>{if(e.target.closest("[data-t]")){rs=-1;rl="";mgStop()}},true);
 $("snd").onclick=()=>{ST.snd=ST.snd===false;save();sndBtn();sfx.good()};
 if(ST.wv!==2){for(const k in ST.cards)if(k[0]=="w")delete ST.cards[k];ST.wv=2;save()}
 sndBtn();setTimeout(checkAch,1500);
