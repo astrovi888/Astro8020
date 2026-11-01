@@ -26,9 +26,16 @@ q:[["Ich bleibe zu Hause, weil ich krank ___.",["bin","sein","ist"],0],["Which s
 {t:"Comparing things",i:`<p>Comparative: add <b>-er</b> (+ <b>als</b> = than). Superlative: <b>am …-sten</b>. Some are irregular: gut → <b>besser</b> → <b>am besten</b>; gern → <b>lieber</b> → <b>am liebsten</b>; viel → <b>mehr</b>.</p><p>Berlin ist <b>größer als</b> Hamburg. Er ist <b>am größten</b>.</p>`,
 q:[["Berlin ist ___ als Hamburg. (groß)",["größer","großer","mehr groß"],0],["Dieses Auto ist ___ als das alte. (gut)",["guter","besser","bester"],1],["Er ist ___ in der Klasse. (groß)",["am größten","am größer","größte"],0],["Ich trinke ___ Tee als Kaffee. (prefer)",["mehr gern","lieber","besser"],1],["Das Wetter ist heute ___ als gestern. (schön)",["schöner","schönere","mehr schön"],0]]}
 ];const A=()=>document.getElementById("app"),pc=n=>ST["pl"+n]||0,ok=n=>pc(n)>=80,op=n=>n==1||(n==8?(ST.plt||0)>=80:ok(n-1)),r1=()=>[1,2,3,4,5,6,7].every(ok),r2=()=>[8,9,10,11,12].every(ok),sh=a=>a.slice().sort(()=>Math.random()-.5);
-let cur=null;
+let cur=null;const MKL=60;
+const mk=()=>(ST.mk=ST.mk||{}),mkn=()=>Object.keys(mk()).length,mkid=x=>x[0]+"|"+x[1][x[2]];
+function addMk(x){mk()[mkid(x)]={q:[x[0],x[1],x[2]]};save()}
+const rnd=(a,n,not)=>sh(a.filter(y=>y!=not)).slice(0,n);
+{const _rv=review;review=function(k,r){_rv(k,r);try{if(r==0){let x;
+ if(/^\d+$/.test(k)&&S[k]){const o=sh([S[k][0]].concat(rnd(S.map(t=>t[0]),2,S[k][0])));x=[S[k][1],o,o.indexOf(S[k][0])]}
+ else if(k[0]=="w"&&WR[+k.slice(1)]&&WR[+k.slice(1)].en){const w=WR[+k.slice(1)],ws=Object.values(WR).filter(y=>y.en&&y.de!=w.de).map(y=>y.de),o=sh([w.de].concat(rnd(ws,2)));x=[w.en,o,o.indexOf(w.de)]}
+ if(x)addMk(x)}}catch(e){}}}
 function lb(n){return `<button type="button" class="btn" data-pl="${n}" ${op(n)?"":"disabled"} style="text-align:left;margin:6px 0">${op(n)?"":"🔒 "}Lesson ${n}: ${LS[n-1].t}${pc(n)?" · "+pc(n)+"%":""}${ok(n)?" ✅":""}</button>`}
-function view(){let h=`<h2>🎓 Learning Path</h2><p class="en">Pass each quiz (80%) to unlock the next lesson. Original lessons following the CEFR grammar goals.</p><h3>Practice what you learned</h3><button type="button" class="btn" data-pl="ps" style="margin:6px 0">📝 Learned sentences</button><button type="button" class="btn" data-pl="pw" style="margin:6px 0">🔤 Learned words</button><h3>A1</h3>`;
+function view(){let h=`<h2>🎓 Learning Path</h2><p class="en">Pass each quiz (80%) to unlock the next lesson. Original lessons following the CEFR grammar goals.</p>${mkn()>=MKL?`<div class="note"><b>⚠️ You have ${mkn()} mistakes.</b> Fix some of them before moving on, so they don’t pile up.</div>`:""}<h3>Practice what you learned</h3><button type="button" class="btn" data-pl="mk" style="margin:6px 0">❌ My mistakes (${mkn()})</button><button type="button" class="btn" data-pl="ps" style="margin:6px 0">📝 Learned sentences</button><button type="button" class="btn" data-pl="pw" style="margin:6px 0">🔤 Learned words</button><h3>A1</h3>`;
  for(let n=1;n<=7;n++)h+=lb(n);
  h+=`<button type="button" class="btn" data-pl="x1" ${r1()?"":"disabled"} style="text-align:left;margin:6px 0">${r1()?"":"🔒 "}A1 exam · 10 questions${ST.plt?" · "+ST.plt+"%":""}${ST.plt>=80?" 🏆":""}</button><h3>A2</h3>`;
  for(let n=8;n<=12;n++)h+=lb(n);
@@ -41,14 +48,17 @@ function prac(kind){let it=[];
  cur={id:kind,qs,i:0,ok:0};q()}
 function q(){const c=cur,x=c.qs[c.i];A().innerHTML=`<p class="en">Question ${c.i+1} of ${c.qs.length}</p><h3>${esc(x[0])}</h3>`+x[1].map((o,k)=>`<button type="button" class="btn" data-po="${k}" style="margin:6px 0">${esc(o)}</button>`).join("")}
 function end(){const c=cur,p=Math.round(c.ok/c.qs.length*100),pass=p>=80;
+ if(c.id=="mk"){addXP(c.ok*3);save();return A().innerHTML=`<h2>Mistakes fixed: ${c.ok}/${c.qs.length}</h2><p>${mkn()} left to fix.</p><button type="button" class="btn" data-pl="mk">More mistakes</button> <button type="button" class="btn" data-pb="back">Back to Path</button>`}
  if(c.id=="ps"||c.id=="pw"){addXP(c.ok*2);save();return A().innerHTML=`<h2>Practice done</h2><p>You got <b>${c.ok}/${c.qs.length}</b> right. Keep going!</p><button type="button" class="btn" data-pb="retry2">Practice again</button> <button type="button" class="btn" data-pb="back">Back to Path</button>`}
  if(c.id=="x1")ST.plt=Math.max(ST.plt||0,p);else if(c.id=="x2")ST.plt2=Math.max(ST.plt2||0,p);else ST["pl"+c.id]=Math.max(pc(c.id),p);
  addXP(pass?20:5);save();
  A().innerHTML=`<h2>${pass?"✅ Passed!":"Not quite yet"}</h2><p>You scored <b>${p}%</b> (${c.ok}/${c.qs.length}). You need 80% to pass.</p>${pass?"":`<button type="button" class="btn" data-pb="retry">Try again</button> `}<button type="button" class="btn" data-pb="back">Back to Path</button>`}
-document.addEventListener("click",e=>{if(tab!="l")return;const t=e.target.closest("[data-pl],[data-po],[data-pb]");if(!t)return;
- if(t.dataset.pl){const id=t.dataset.pl;if(id=="ps"||id=="pw")prac(id);else if(id[0]=="x"){const lo=id=="x1"?0:7,hi=id=="x1"?7:12,pool=[].concat(...LS.slice(lo,hi).map(l=>l.q));cur={id,qs:sh(pool).slice(0,10),i:0,ok:0};q()}
+document.addEventListener("click",e=>{if(tab!="l")return;const t=e.target.closest("[data-pl],[data-po],[data-pb],[data-pm]");if(!t)return;
+ if(t.dataset.pl){const id=t.dataset.pl;if(id=="mk"){const n=mkn();A().innerHTML=n?`<h2>❌ My mistakes</h2><p>${n} to fix. Get one right and it disappears.</p>`+[5,10,15,20].map(c=>`<button type="button" class="btn" data-pm="${c}" style="margin:6px 0">Fix ${Math.min(c,n)} mistake${Math.min(c,n)==1?"":"s"}</button>`).join("")+`<button type="button" class="btn" data-pb="back">Back</button>`:`<h2>No mistakes 🎉</h2><p>Wrong answers from lessons, quizzes and the Learn tab collect here.</p><button type="button" class="btn" data-pb="back">Back</button>`}
+  else if(id=="ps"||id=="pw")prac(id);else if(id[0]=="x"){const lo=id=="x1"?0:7,hi=id=="x1"?7:12,pool=[].concat(...LS.slice(lo,hi).map(l=>l.q));cur={id,qs:sh(pool).slice(0,10),i:0,ok:0};q()}
   else{const l=LS[id-1];cur={id,qs:l.q,i:0,ok:0};A().innerHTML=`<h2>Lesson ${id}: ${l.t}</h2>${l.i}<button type="button" class="btn" data-pb="start">Start quiz</button> <button type="button" class="btn" data-pb="back">Back</button>`}}
- else if(t.dataset.po!==undefined&&cur){const x=cur.qs[cur.i],k=+t.dataset.po,g=k==x[2];if(g){cur.ok++;sfx.good&&sfx.good()}
+ else if(t.dataset.pm){const qs=sh(Object.values(mk()).map(m=>m.q)).slice(0,+t.dataset.pm);cur={id:"mk",qs,i:0,ok:0};q()}
+ else if(t.dataset.po!==undefined&&cur){const x=cur.qs[cur.i],k=+t.dataset.po,g=k==x[2];if(g){cur.ok++;sfx.good&&sfx.good();if(cur.id=="mk"){delete mk()[mkid(x)];save()}}else if(cur.id!="mk")addMk(x);
   A().innerHTML=`<h3>${esc(x[0])}</h3><p>${g?"✅ Correct!":"❌ Not quite. Answer: <b>"+esc(x[1][x[2]])+"</b>"}</p><button type="button" class="btn p" data-pb="next">${cur.i+1<cur.qs.length?"Next":"See result"}</button>`}
  else if(t.dataset.pb=="start"||t.dataset.pb=="retry"){cur.i=0;cur.ok=0;q()}
  else if(t.dataset.pb=="retry2"){prac(cur.id)}
