@@ -48,6 +48,29 @@ q:[["German nouns are always written with…",["a capital letter","a small lette
 q:[["“drei” is…",["3","2","4"],0],["“zehn” is…",["10","9","6"],0],["“Samstag” is…",["Saturday","Sunday","Monday"],0],["“sechs” is…",["6","7","5"],0]]}
 ];
 const sq=q=>{const o=sh(q[1]);return [q[0],o,o.indexOf(q[1][q[2]])]},bOk=n=>(ST["b"+n]||0)>=80;
+
+const CC={
+hello:[["Hi! I’m your German guide. We’ll go one small step at a time. Ready?","Welcome back! Let’s continue gently."],["Willkommen! (Welcome!) You already know some German. Let’s build on it.","Schön, dich zu sehen! (Nice to see you!) Ready for the next step?"],["Willkommen zurück! Heute machen wir wieder einen Schritt weiter. (Today we take another step.)","Schön, dass du da bist! Bereit für die nächste Lektion?"],["Willkommen zurück! Heute wird es etwas anspruchsvoller. Bist du bereit?","Schön, dich zu sehen. Machen wir da weiter, wo wir aufgehört haben."]],
+right:[["Great job!","Yes, that’s right!"],["Richtig! Very good.","Sehr gut!"],["Richtig! Das war gut.","Genau!"],["Ausgezeichnet, das stimmt.","Genau richtig."]],
+wrong:[["Not quite, but that’s how we learn. Look at the answer."],["Fast! Almost. Check the answer."],["Nicht ganz. Schau dir die Antwort an."],["Nicht ganz richtig. Merk dir die Antwort, wir wiederholen das später."]],
+pass:[["You passed! You’re really starting to learn German."],["Bestanden! You passed. On to the next one."],["Bestanden! Du kommst richtig voran."],["Bestanden, das war sauber. Weiter geht’s."]],
+fail:[["That’s okay. Read the explanation again and try once more."],["Nicht schlimm. Try again, you can do it."],["Nicht schlimm. Lies die Erklärung noch einmal und versuch es nochmal."],["Das war knapp. Wiederhole die Regel und versuch es noch einmal."]],
+step:[["Here’s one small idea. Read it, then we’ll try it together."],["Eine neue Idee (a new idea). Then you try it."],["Kurz erklärt, dann probierst du es aus."],["Kurz die Regel, dann üben wir sie direkt."]]};
+const lvC=()=>(ST.plt2||0)>=80?3:(ST.plt||0)>=80?2:([1,2,3,4].some(bOk)||pc(1)>0)?1:0;
+const coach=e=>{const a=CC[e][lvC()];return a[Math.floor(Math.random()*a.length)]};
+function nextId(){for(let n=1;n<=4;n++)if(!bOk(n))return["b"+n,B0[n-1].t];
+ for(let n=1;n<=7;n++)if(op(n)&&!ok(n))return[""+n,"Lesson "+n+": "+LS[n-1].t];
+ if(r1()&&(ST.plt||0)<80)return["x1","A1 exam"];
+ for(let n=8;n<=12;n++)if(op(n)&&!ok(n))return[""+n,"Lesson "+n+": "+LS[n-1].t];
+ if(r2()&&(ST.plt2||0)<80)return["x2","A2 exam"];return null}
+function home(){const d=4+[1,2,3,4,5,6,7,8,9,10,11,12].filter(ok).length+0,t=[1,2,3,4].filter(bOk).length+[1,2,3,4,5,6,7,8,9,10,11,12].filter(ok).length,n=nextId();
+ return `<div class="note"><div style="font-size:15px;line-height:1.5">🤖 Astro: ${coach("hello")}</div><div style="height:10px;background:var(--bd,#333);border-radius:6px;margin:10px 0"><div style="height:10px;width:${Math.round(t/16*100)}%;background:var(--der,#7ab);border-radius:6px"></div></div><div class="en" style="font-size:13px">${t} of 16 lessons done</div>${n?`<button type="button" class="btn p" data-pl="${n[0]}" style="margin-top:10px">▶ Continue: ${n[1]}</button>`:"<p>🏆 You finished every lesson so far. More are coming!</p>"}</div>`}
+function begin(title,intro){const P=intro.split("</p>").map(x=>x.trim()).filter(Boolean).map(x=>x+"</p>"),Q=cur.qs.length,seq=[];
+ P.forEach((p,k)=>{seq.push({t:p,title});if(k<Q)seq.push({q:k})});for(let k=P.length;k<Q;k++)seq.push({q:k});cur.seq=seq;cur.si=0;cur.title=title;step()}
+function step(){const c=cur,it=c.seq[c.si];if(!it)return end();
+ if(it.q!==undefined){c.i=it.q;return q()}
+ const tn=c.seq.filter(x=>x.t).indexOf(it)+1,tt=c.seq.filter(x=>x.t).length;
+ A().innerHTML=`<p class="en" style="font-size:13px">${esc(c.title)} · idea ${tn} of ${tt}</p><p style="font-size:14px">🤖 Astro: ${coach("step")}</p><div class="note" style="font-size:17px;line-height:1.6">${it.t}</div><button type="button" class="btn p" data-pb="tnext">Continue</button>`}
 let cur=null;const MKL=60;
 const mk=()=>(ST.mk=ST.mk||{}),mkn=()=>Object.keys(mk()).length,mkid=x=>x[0]+"|"+x[1][x[2]];
 function addMk(x){mk()[mkid(x)]={q:[x[0],x[1],x[2]]};save()}
@@ -57,11 +80,16 @@ const rnd=(a,n,not)=>sh(a.filter(y=>y!=not)).slice(0,n);
  else if(k[0]=="w"&&WR[+k.slice(1)]&&WR[+k.slice(1)].en){const w=WR[+k.slice(1)],ws=Object.values(WR).filter(y=>y.en&&y.de!=w.de).map(y=>y.de),o=sh([w.de].concat(rnd(ws,2)));x=[w.en,o,o.indexOf(w.de)]}
  if(x)addMk(x)}}catch(e){}}}
 function lb(n){return `<button type="button" class="btn" data-pl="${n}" ${op(n)?"":"disabled"} style="text-align:left;margin:6px 0">${op(n)?"":"🔒 "}Lesson ${n}: ${LS[n-1].t}${pc(n)?" · "+pc(n)+"%":""}${ok(n)?" ✅":""}</button>`}
-function view(){let h=`<h2>🎓 Learning Path</h2><p class="en">Pass each quiz (80%) to unlock the next lesson. Original lessons following the CEFR grammar goals.</p>${mkn()>=MKL?`<div class="note"><b>⚠️ You have ${mkn()} mistakes.</b> Fix some of them before moving on, so they don’t pile up.</div>`:""}<h3>🌱 Start here: German basics</h3><p class="en" style="font-size:14px">New to German? Begin with these 4 short lessons.</p>${B0.map((l,k)=>`<button type="button" class="btn" data-pl="b${k+1}" style="text-align:left;margin:6px 0">${l.t}${bOk(k+1)?" ✅":""}</button>`).join("")}<h3>Dialogues</h3><button type="button" class="btn" data-pl="dl" style="margin:6px 0">💬 Dialogues (${DG.filter((_,k)=>dgOk(k+1)).length}/${DG.length} learned)</button><h3>Practice what you learned</h3><button type="button" class="btn" data-pl="mk" style="margin:6px 0">❌ My mistakes (${mkn()})</button><button type="button" class="btn" data-pl="ps" style="margin:6px 0">📝 Learned sentences</button><button type="button" class="btn" data-pl="pw" style="margin:6px 0">🔤 Learned words</button><h3>A1</h3>`;
- for(let n=1;n<=7;n++)h+=lb(n);
- h+=`<button type="button" class="btn" data-pl="x1" ${r1()?"":"disabled"} style="text-align:left;margin:6px 0">${r1()?"":"🔒 "}A1 exam · 10 questions${ST.plt?" · "+ST.plt+"%":""}${ST.plt>=80?" 🏆":""}</button><h3>A2</h3>`;
- for(let n=8;n<=12;n++)h+=lb(n);
- h+=`<button type="button" class="btn" data-pl="x2" ${r2()?"":"disabled"} style="text-align:left;margin:6px 0">${r2()?"":"🔒 "}A2 exam · 10 questions${ST.plt2?" · "+ST.plt2+"%":""}${ST.plt2>=80?" 🏆":""}</button><p class="en" style="font-size:13px">B1 and B2 are coming.</p>`;A().innerHTML=h}
+function nd(id,label,st,k){const o=[0,40,0,-40][k%4],c=st=="done"?"#58cc02":st=="open"?"var(--der,#7ab)":"var(--bd,#444)";return `<div style="display:flex;flex-direction:column;align-items:center;transform:translateX(${o}px);margin:8px 0"><button type="button" data-pl="${id}" ${st=="lock"?"disabled":""} style="width:62px;height:62px;border-radius:50%;border:3px solid ${c};background:${st=="done"?"#58cc02":"var(--card,#1c1c1e)"};color:${st=="done"?"#fff":"var(--fg,#fff)"};font-size:22px;padding:0">${st=="done"?"✓":st=="lock"?"🔒":"★"}</button><span style="font-size:12px;max-width:150px;text-align:center;margin-top:4px">${label}</span></div>`}
+function sec(t,nodes){return `<h3 style="margin:18px 0 4px">${t}</h3><div style="background:linear-gradient(var(--bd,#333),var(--bd,#333)) center/2px 100% no-repeat;padding:4px 0">${nodes.join("")}</div>`}
+function view(){const st=n=>ok(n)?"done":op(n)?"open":"lock";
+ let h=`<h2>🎓 Learning Path</h2>${home()}${mkn()>=MKL?`<div class="note"><b>⚠️ You have ${mkn()} mistakes.</b> Fix some of them before moving on, so they don’t pile up.</div>`:""}`;
+ h+=sec("🌱 Start here (A0)",B0.map((l,k)=>nd("b"+(k+1),l.t,bOk(k+1)?"done":(k==0||bOk(k))?"open":"lock",k)));
+ h+=sec("A1 · Beginner",[1,2,3,4,5,6,7].map((n,k)=>nd(""+n,LS[n-1].t,st(n),k)).concat([nd("x1","A1 exam",(ST.plt||0)>=80?"done":r1()?"open":"lock",7)]));
+ h+=sec("A2 · Elementary",[8,9,10,11,12].map((n,k)=>nd(""+n,LS[n-1].t,st(n),k)).concat([nd("x2","A2 exam",(ST.plt2||0)>=80?"done":r2()?"open":"lock",5)]));
+ h+=sec("B1 · Intermediate",[nd("soon","Coming soon","lock",0)]);
+ h+=`<details style="margin-top:18px"><summary><b>💬 Dialogues and practice</b></summary><button type="button" class="btn" data-pl="dl" style="margin:6px 0">💬 Dialogues (${DG.filter((_,k)=>dgOk(k+1)).length}/${DG.length} learned)</button><button type="button" class="btn" data-pl="ps" style="margin:6px 0">📝 Learned sentences</button><button type="button" class="btn" data-pl="pw" style="margin:6px 0">🔤 Learned words</button><button type="button" class="btn" data-pl="mk" style="margin:6px 0">❌ My mistakes (${mkn()})</button></details>`;
+ A().innerHTML=h}
 function prac(kind){let it=[];
  if(kind=="ps"){const L=learned().map(k=>S[k]).filter(Boolean);it=L.map(s=>[s[1],s[0]])}
  else{it=Object.keys(ST.cards).filter(k=>k[0]=="w"&&ST.cards[k].reps>=1).map(k=>WR[+k.slice(1)]).filter(w=>w&&w.en).map(w=>[w.en,w.de])}
@@ -74,20 +102,21 @@ function end(){const c=cur,p=Math.round(c.ok/c.qs.length*100),pass=p>=80;
  if(c.id=="ps"||c.id=="pw"){addXP(c.ok*2);save();return A().innerHTML=`<h2>Practice done</h2><p>You got <b>${c.ok}/${c.qs.length}</b> right. Keep going!</p><button type="button" class="btn" data-pb="retry2">Practice again</button> <button type="button" class="btn" data-pb="back">Back to Path</button>`}
  if(c.id=="x1")ST.plt=Math.max(ST.plt||0,p);else if(c.id=="x2")ST.plt2=Math.max(ST.plt2||0,p);else if(c.id[0]=="b")ST[c.id]=Math.max(ST[c.id]||0,p);else if(c.id[0]=="d")ST["dg"+c.id.slice(1)]=Math.max(ST["dg"+c.id.slice(1)]||0,p);else ST["pl"+c.id]=Math.max(pc(c.id),p);
  addXP(pass?20:5);save();
- A().innerHTML=`<h2>${pass?(c.id[0]=="d"?"✅ Dialogue learned!":"✅ Passed!"):"Not quite yet"}</h2><p>You scored <b>${p}%</b> (${c.ok}/${c.qs.length}). You need 80% to pass.</p>${pass?"":`<button type="button" class="btn" data-pb="retry">Try again</button> `}<button type="button" class="btn" data-pb="back">Back to Path</button>`}
+ A().innerHTML=`<h2>${pass?(c.id[0]=="d"?"✅ Dialogue learned!":"✅ Passed!"):"Not quite yet"}</h2><p>🤖 Astro: ${coach(pass?"pass":"fail")}</p><p>You scored <b>${p}%</b> (${c.ok}/${c.qs.length}). You need 80% to pass.</p>${pass?"":`<button type="button" class="btn" data-pb="retry">Try again</button> `}<button type="button" class="btn" data-pb="back">Back to Path</button>`}
 document.addEventListener("click",e=>{if(tab!="l")return;const t=e.target.closest("[data-pl],[data-po],[data-pb],[data-pm]");if(!t)return;
  if(t.dataset.pl){const id=t.dataset.pl;if(id=="mk"){const n=mkn();A().innerHTML=n?`<h2>❌ My mistakes</h2><p>${n} to fix. Get one right and it disappears.</p>`+[5,10,15,20].map(c=>`<button type="button" class="btn" data-pm="${c}" style="margin:6px 0">Fix ${Math.min(c,n)} mistake${Math.min(c,n)==1?"":"s"}</button>`).join("")+`<button type="button" class="btn" data-pb="back">Back</button>`:`<h2>No mistakes 🎉</h2><p>Wrong answers from lessons, quizzes and the Learn tab collect here.</p><button type="button" class="btn" data-pb="back">Back</button>`}
   else if(id=="dl")A().innerHTML=`<h2>💬 Dialogues</h2><p class="en">Read, listen, then complete the missing words. Pass (80%) to mark it learned.</p>`+DG.map((d,k)=>`<button type="button" class="btn" data-pl="d${k+1}" style="text-align:left;margin:6px 0">${d.l} · ${d.t}${dgOk(k+1)?" ✅ learned":""}</button>`).join("")+`<button type="button" class="btn" data-pb="back">Back</button>`
   else if(/^d\d+$/.test(id)&&DG[id.slice(1)-1]){const d=DG[id.slice(1)-1];cur={id,qs:d.q,i:0,ok:0};A().innerHTML=`<h2>${d.t}</h2><p class="en">${d.l}</p>`+d.L.map(x=>`<p><b>${esc(x[0])}:</b> ${esc(x[1])} ${typeof spk=="function"?spk(x[1]):""}<br><span class="en" style="font-size:14px">${esc(x[2])}</span></p>`).join("")+`<button type="button" class="btn p" data-pb="start">Practice this dialogue</button> <button type="button" class="btn" data-pl="dl">Back</button>`}
-  else if(/^b\d$/.test(id)){const l=B0[id[1]-1];cur={id,qs:l.q.map(sq),i:0,ok:0};A().innerHTML=`<h2>${l.t}</h2>${l.i}<button type="button" class="btn p" data-pb="start">Start quiz</button> <button type="button" class="btn" data-pb="back">Back</button>`}
+  else if(/^b\d$/.test(id)){const l=B0[id[1]-1];cur={id,qs:l.q.map(sq),i:0,ok:0};begin(l.t,l.i)}
   else if(id=="ps"||id=="pw")prac(id);else if(id[0]=="x"){const lo=id=="x1"?0:7,hi=id=="x1"?7:12,pool=[].concat(...LS.slice(lo,hi).map(l=>l.q));cur={id,qs:sh(pool).slice(0,10),i:0,ok:0};q()}
-  else{const l=LS[id-1];cur={id,qs:l.q,i:0,ok:0};A().innerHTML=`<h2>Lesson ${id}: ${l.t}</h2>${l.i}<button type="button" class="btn" data-pb="start">Start quiz</button> <button type="button" class="btn" data-pb="back">Back</button>`}}
+  else{const l=LS[id-1];cur={id,qs:l.q,i:0,ok:0};begin(`Lesson ${id}: ${l.t}`,l.i)}}
  else if(t.dataset.pm){const qs=sh(Object.values(mk()).map(m=>m.q)).slice(0,+t.dataset.pm);cur={id:"mk",qs,i:0,ok:0};q()}
  else if(t.dataset.po!==undefined&&cur){const x=cur.qs[cur.i],k=+t.dataset.po,g=k==x[2];if(g){cur.ok++;sfx.good&&sfx.good();if(cur.id=="mk"){delete mk()[mkid(x)];save()}}else if(cur.id!="mk")addMk(x);
-  A().innerHTML=`<h3>${esc(x[0])}</h3><p>${g?"✅ Correct!":"❌ Not quite. Answer: <b>"+esc(x[1][x[2]])+"</b>"}</p><button type="button" class="btn p" data-pb="next">${cur.i+1<cur.qs.length?"Next":"See result"}</button>`}
- else if(t.dataset.pb=="start"||t.dataset.pb=="retry"){cur.i=0;cur.ok=0;q()}
+  A().innerHTML=`<h3>${esc(x[0])}</h3><p>${g?"✅ ":"❌ "}${coach(g?"right":"wrong")}</p>${g?"":`<p>Answer: <b>${esc(x[1][x[2]])}</b></p>`}<button type="button" class="btn p" data-pb="next">${cur.i+1<cur.qs.length?"Next":"See result"}</button>`}
+ else if(t.dataset.pb=="start"||t.dataset.pb=="retry"){cur.i=0;cur.ok=0;cur.seq=null;q()}
  else if(t.dataset.pb=="retry2"){prac(cur.id)}
- else if(t.dataset.pb=="next"){cur.i++;cur.i<cur.qs.length?q():end()}
+ else if(t.dataset.pb=="tnext"){cur.si++;step()}
+ else if(t.dataset.pb=="next"){if(cur.seq){cur.si++;step()}else{cur.i++;cur.i<cur.qs.length?q():end()}}
  else if(t.dataset.pb=="back"){cur=null;view()}});
 const _r=render;render=function(){if(tab=="l"){topbar();cur=null;view();document.querySelectorAll("#bbar button").forEach(b=>b.classList.toggle("on",b.dataset.g=="l"));return}_r()};
 const bb=document.getElementById("bbar");if(bb)bb.insertAdjacentHTML("beforeend",'<button data-g="l"><i>🎓</i>Path</button>');
