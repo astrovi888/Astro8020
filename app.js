@@ -36,7 +36,7 @@ const learned=()=>Object.keys(ST.cards).filter(k=>/^\d+$/.test(k)&&ST.cards[k].r
 const lvl=()=>Math.min(100,Math.floor(ST.xp/150)),stg=l=>l==0?"Level 0":l<=15?"A1":l<=40?"A2":l<=70?"B1":l<100?"B2":"Complete";
 function pop(t){const p=$("pop");p.textContent=t;p.className="";void p.offsetWidth;p.className="go"}
 function topbar(){const n=ST.today.d==day()?ST.today.n:0,p=Math.min(100,n/ST.goal*100);
- $("top").innerHTML=`<span>🔥 ${ST.streak} day${ST.streak==1?"":"s"}</span><div class="bar" style="flex:1;margin:0"><i style="width:${p}%"></i></div><span>${Math.min(n,ST.goal)}/${ST.goal} today</span><span>🪙 ${coins()}</span><span>Lv ${lvl()}</span>`}
+ $("top").innerHTML=`<span>🔥 ${ST.streak} day${ST.streak==1?"":"s"}</span><div class="bar" style="flex:1;margin:0"><i style="width:${p}%"></i></div><span>${Math.min(n,ST.goal)}/${ST.goal} today</span><span data-wallet="1" role="button" tabindex="0" aria-label="Open wallet" style="cursor:pointer">🪙 ${coins()}</span><span>Lv ${lvl()}</span>`}
 function addXP(x){
  const b=lvl(),t=day();ST.xp+=x;gain+=x;
  ST.ce=(ST.ce||0)+Math.ceil(x/5);
@@ -91,10 +91,10 @@ function done(){
  ${ses.again.length?`<div class="note"><b>Worth another look:</b><div class="en" style="font-size:15px">${ses.again.join("<br>")}</div></div>`:`<p class="en">Clean session. Nothing to review again.</p>`}
  <div class="row" style="margin-top:14px"><button class="btn" data-a="back">Change filters</button><button class="btn p" data-a="go">Another session</button></div></div>`;save();
 }
-const head=m=>`<div class="meta"><span>${i+1} / ${q.length}</span><span>${m}</span></div><div class="bar"><i style="width:${i/q.length*100}%"></i></div>`;
+const head=m=>`<div class="meta"><button type="button" class="chip" data-a="back" style="margin:0" aria-label="Leave this session">← Back</button><span>${i+1} / ${q.length}</span><span>${m}</span></div><div class="bar"><i style="width:${i/q.length*100}%"></i></div>`;
 const rt=k=>`<div id="rt" class="row rate hide" style="margin-top:16px">${[[0,"Again"],[3,"Hard"],[4,"Good"],[5,"Easy"]].map(([v,l])=>`<button class="btn" data-a="r" data-v="${v}">${l}<small>${lab(sched(ST.cards[k],v))}</small></button>`).join("")}</div>`;
 const tags=(l,t,b)=>`<span class="tg">${l}</span><span class="tg">${TE[t]||""} ${t}</span><span class="tg">words ≤${b}</span>`;
-const cas=s=>s[6]?`<details class="note"${ST.casual?" open":""}><summary>💬 How Germans really say it</summary><div style="margin-top:8px">${col(s[6])} ${typeof spk=="function"?spk(s[6]):""}</div></details>`:"";
+let cas=s=>s[6]?`<details class="note"${ST.casual?" open":""}><summary>💬 How Germans really say it</summary><div style="margin-top:8px">${col(s[6])} ${typeof spk=="function"?spk(s[6]):""}</div></details>`:"";
 function cardS(){
  const s=S[q[i]],e=ST.dir=="en2de";window.hv=[];
  app.innerHTML=`<div class="box">${head(`${s[3]} · ${s[4]}`)}

@@ -141,14 +141,15 @@ function storyView(){const s=STORY[rs],full=s.s.map(x=>x[0]).join(" ");QZ={ok:{}
  const wr=s.w?s.w[0]:"Write 3–5 sentences in German: what happened in this story, or tell it in your own words.";
  app.innerHTML=`<div class="box"><div class="meta"><button class="chip" data-st="-1" style="margin:0">← ${s.l} stories</button><span class="tg">${s.l}${s.min?" · "+s.min+" min":""}</span></div>
  <h2 style="margin:14px 0 4px;font-size:22px">${s.e} ${esc(s.t)}</h2>${s.cat?`<p class="en" style="margin:0 0 8px;font-size:13px">${esc(s.cat)}</p>`:""}<div style="margin-bottom:6px">${spk(full)}<span class="en" style="font-size:13px"> whole story</span></div>
- ${s.s.map((x,k)=>`<div class="ln"><span class="de" data-tr="${k}" role="button" tabindex="0">${col(esc(x[0]))}</span> <button class="spk" data-say="${esc(x[0])}" aria-label="Play sentence">🔊</button><div id="tr${k}" class="en hide" style="font-size:16px">${esc(x[1])}</div></div>`).join("")}
+ <div class="seg" style="margin:8px 0" role="tablist" aria-label="Tap mode"><button class="${ST.wm!==false?"on":""}" data-wmset="1">Tap words</button><button class="${ST.wm===false?"on":""}" data-wmset="0">Tap sentences</button></div><p class="en" style="font-size:13px;margin:0 0 8px">${ST.wm!==false?`Tap a word for its meaning (${ecoCost.look} 🪙, ${ecoState().fl} free today, words you know are free). Use 🌐 for a whole sentence, always free.`:"Tap a sentence for its translation."}</p>
+ ${s.s.map((x,k)=>`<div class="ln"><span class="de" data-tr="${k}" role="button" tabindex="0">${col(esc(x[0]))}</span> <button class="spk" data-say="${esc(x[0])}" aria-label="Play sentence">🔊</button><button class="spk" data-tr="${k}" aria-label="Show translation">🌐</button><div id="tr${k}" class="en hide" style="font-size:16px">${esc(x[1])}</div></div>`).join("")}
  ${pron}${vocab}
- <div class="note"><b>Words you know here</b>${gloss(full)||`<p class="en" style="font-size:14px;margin:4px 0 0">None from the word list yet.</p>`}</div>
+ <div class="note"><b>New words in this story</b><span class="en" style="display:block;font-size:13px">Only words from the top-1000 list that you haven’t learned yet.</span>${wtUnknown(full,14)}</div>
  ${quiz}
  <div class="note"><b>Now write</b><p class="en" style="margin:6px 0;font-size:15px">${esc(wr)}</p><textarea id="wr" rows="5" placeholder="Schreib hier auf Deutsch…" style="width:100%;font:inherit;background:var(--card);color:var(--fg);border:1px solid var(--bd);border-radius:10px;padding:10px"></textarea>${s.w?`<div style="height:8px"></div><button class="btn" data-rd="model">Show a model answer</button><div id="wm" class="hide"></div>`:""}</div></div>`}
 function storyDone(){const s=STORY[rs],first=!rdone(s);
  if(first){ST.read=ST.read||{};ST.read[s.t]=day();addXP(15)}save();
- $("qd").innerHTML=`<p style="margin:8px 0 0"><b>Story complete!</b>${first?" +15 XP":""}</p>`}
+ $("qd").innerHTML=`<p style="margin:8px 0 0"><b>Story complete!</b>${first?" +15 XP":""}</p>`;if(first&&typeof astroSay=="function")astroSay(ABrain.story(s.t),null,true)}
 function quizAns(i,k){const s=STORY[rs],q=s.qs[i],b=document.querySelector(`[data-qa="${i}:${k}"]`);if(QZ.ok[i]||!b)return;
  if(k==q.a){sfx.good();QZ.ok[i]=1;document.querySelectorAll(`#q${i} [data-qa]`).forEach(x=>x.disabled=true);b.style.borderColor="var(--das)";
   $("qr"+i).innerHTML=`<p style="margin:8px 0 0"><b>Richtig!</b>${q.e?` <span class="en" style="font-size:14px">${esc(q.e)}</span>`:""}</p>`;
@@ -216,7 +217,7 @@ function mgSetup(){mgStop();
  mgBoard().then(h=>{const el=$("mgb");if(el&&tab=="m"&&!MG)el.innerHTML=h})}
 function mgStart(){mgStop();MG={pool:mgPool(),L:[],R:[],sel:null,score:0,end:Date.now()+(ST.mt||60)*1000,done:false,iv:0};
  for(let k=0;k<6;k++){const w=mgNew();MG.L.push(w);MG.R.push(w)}MG.R=shuf(MG.R);
- app.innerHTML=`<div class="box"><div class="meta"><span>Matched <b id="ms" style="color:var(--fg)">0</b></span><span id="mt">60s</span></div><div class="bar"><i id="mgbar" style="width:100%;animation:none"></i></div><div id="mgg" class="mg"></div></div>`;
+ app.innerHTML=`<div class="box"><div class="meta"><button type="button" class="chip" data-do="mgagain" style="margin:0">← Quit</button><span>Matched <b id="ms" style="color:var(--fg)">0</b></span><span id="mt">60s</span></div><div class="bar"><i id="mgbar" style="width:100%;animation:none"></i></div><div id="mgg" class="mg"></div></div>`;
  mgGrid();MG.iv=setInterval(mgTick,200)}
 function mgGrid(){const sl=(s,k)=>MG.sel&&MG.sel[0]==s&&MG.sel[1]==k?" sel":"";
  $("mgg").innerHTML=`<div>${MG.L.map((w,k)=>`<button class="tile${sl("L",k)}" data-mg="L${k}">${w.art?`<span class="${w.art}">${w.art}</span> `:""}${w.de}</button>`).join("")}</div><div>${MG.R.map((w,k)=>`<button class="tile${sl("R",k)}" data-mg="R${k}">${esc(eshort(w))}</button>`).join("")}</div>`}
@@ -261,9 +262,9 @@ $("snd").onclick=()=>{ST.snd=ST.snd===false;save();sndBtn();sfx.good()};
 if(ST.wv!==2){for(const k in ST.cards)if(k[0]=="w")delete ST.cards[k];ST.wv=2;save()}
 sndBtn();setTimeout(checkAch,1500);
 /* ---- navigation, tap feedback, flash ---- */
-const LT=[["s","Sentences"],["b","Build"],["a","Articles"],["w","Words"]];
+const LT=[["s","Sentences"],["b","Build"],["a","Articles"],["w","Words"],["x","Real"]];
 const lseg=()=>`<div class="seg" role="tablist" aria-label="Practice mode">${LT.map(([k,l])=>`<button class="${tab==k?"on":""}" data-lt="${k}">${l}</button>`).join("")}</div>`;
-const grp=t=>"sbaw".includes(t)?"s":t;
+const grp=t=>"sbawx".includes(t)?"s":t;
 function bbHi(){document.querySelectorAll("#bbar button").forEach(b=>b.classList.toggle("on",b.dataset.g==grp(tab)))}
 function flash(k){let f=$("flash");if(!f){f=document.createElement("div");f.id="flash";document.body.appendChild(f)}f.className="";void f.offsetWidth;f.className="fl-"+k}
 {const _f=form;form=function(m){_f(m);app.insertAdjacentHTML("afterbegin",lseg())};

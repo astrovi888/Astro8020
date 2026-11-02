@@ -1,48 +1,38 @@
-// Astro: friendly coach (bubble, idle nudges, Learn hints), "?" help hub, article-round limits. Pure addition.
-(function(){
-const $=id=>document.getElementById(id),pick=a=>a[Math.floor(Math.random()*a.length)],esc_=x=>String(x).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
-const go=name=>{const b=[...document.querySelectorAll("#bbar button")].find(x=>x.textContent.includes(name));if(b)b.click()};
-let last=0,idleAt=Date.now(),hideT=null,rec=[],sesN=0,sesBad=0;
-function say(msg,act,force){if(ST.aoff&&!force)return;if(!force&&Date.now()-last<6e4)return;last=Date.now();let b=$("astro");if(!b){b=document.createElement("div");b.id="astro";b.style.cssText="position:fixed;left:12px;right:12px;bottom:96px;max-width:420px;margin:0 auto;z-index:900;background:var(--card,#1c1c1e);color:var(--fg,#fff);border:1px solid var(--bd,#333);border-radius:14px;padding:12px 14px;box-shadow:0 6px 24px rgba(0,0,0,.4)";document.body.appendChild(b)}
- b.innerHTML=`<div style="display:flex;gap:10px;align-items:flex-start"><div style="font-size:26px">🤖</div><div style="flex:1;font-size:15px;line-height:1.45"><b>Astro</b><br>${msg}${act?`<div style="margin-top:8px"><button type="button" class="btn p" data-ast="go" style="padding:6px 12px;width:auto">${act[0]}</button></div>`:""}</div><button type="button" data-ast="x" aria-label="Close" style="background:none;border:0;color:inherit;font-size:20px;width:auto;padding:0 4px">×</button></div>`;b._a=act;clearTimeout(hideT);hideT=setTimeout(()=>{const e=$("astro");if(e)e.remove()},11000)}
-document.addEventListener("click",e=>{const t=e.target.closest("[data-ast]");if(!t)return;const b=$("astro");if(t.dataset.ast=="go"&&b&&b._a)b._a[1]();if(b)b.remove()});
-["pointerdown","keydown","scroll"].forEach(ev=>document.addEventListener(ev,()=>idleAt=Date.now(),{passive:true}));
-// context-aware idle nudges
-setInterval(()=>{if(document.visibilityState!="visible"||ST.aoff||Date.now()-idleAt<12e4||Date.now()-last<3e5)return;
- const mk=Object.keys(ST.mk||{}).length,ao=Object.values(ST.art||{}).reduce((a,x)=>a+x.ok+x.bad,0);
- if(mk>=10)say(`You’ve got ${mk} mistakes waiting for me to roast. Five minutes? 😏`,["Fix mistakes",()=>{go("Path");setTimeout(()=>{const x=document.querySelector('[data-pl="mk"]');if(x){const d=x.closest("details");if(d)d.open=true;x.click()}},200)}]);
- else if((ST["pl2"]||0)>=80&&ao<20)say("You know der, die, das now. Want to try them on real words?",["Try articles",()=>{go("Learn");setTimeout(()=>{const x=[...document.querySelectorAll("#app button,#app .seg *")].find(y=>/Articles/.test(y.textContent));x&&x.click()},250)}]);
- else say(pick(["Psst… are we learning, or just staring at the screen? 👀","Still there? Even one flashcard counts.","I’m getting bored. Quick round?","German won’t learn itself. I’ve tried.","Your streak is looking at you. Say something nice to it."]),["Let’s go",()=>go("Learn")]);idleAt=Date.now()},15000);
-// Learn hints
-{const _rv=review;review=function(k,r){_rv(k,r);sesN++;if(r==0)sesBad++;rec.push(r);rec=rec.slice(-4);
- if(rec.filter(x=>x==0).length>=3){rec=[];say("Rough patch, happens to everyone. Slow down, or let me walk you through the basics first.",["Open Path",()=>go("Path")])}
- else if(r==3&&Math.random()<.15)say("Hard, but that’s okay. Make a silly picture of it in your head. Weird sticks better.")}}
-{const _d=done;done=function(){_d();const a=sesN?Math.round((sesN-sesBad)/sesN*100):100;
- say(a>=80?"Clean round! 🔥 Come back tomorrow and the shaky ones will have waited for you.":a>=50?"Solid. The cards you missed come back sooner, that’s the trick. 😉":"Tough one! Want me to back you up with a short lesson?",a<50?["Go to Path",()=>go("Path")]:null,true);sesN=sesBad=0}}
-// Article rounds: limit 5/10/15/20
-const lim=()=>ST.alim||10;
-const fl=(f,w)=>(f.l=="0"||w.lv==f.l)&&(!f.r||w.rank<=f.r)&&(f.t=="0"||w.theme==f.t);
-function prog(){const L={};["A1","A2","B1","B2"].forEach(l=>L[l]={t:0,l:0,th:{}});S.forEach(s=>{const x=L[s[3]];if(!x)return;x.t++;const h=x.th[s[4]]=x.th[s[4]]||{t:0,l:0};h.t++});learned().forEach(k=>{const s=S[k];if(!s)return;const x=L[s[3]];if(!x)return;x.l++;x.th[s[4]].l++});return L}
-function recLv(){const L=prog();let lv="B2";for(const l of["A1","A2","B1","B2"]){if(L[l].t&&L[l].l/L[l].t<.6){lv=l;break}}const th=Object.entries(L[lv].th).sort((a,b)=>a[1].l/a[1].t-b[1].l/b[1].t)[0];return{lv,th:th?th[0]:null,tl:th?th[1]:null}}
-window.astroReport=function(){const r=recLv(),n=learned().length,why={Daily:"you’ll use these every single day",Home:"home life is where conversations start",Work:"work German opens doors for jobs and training",Restaurant:"you’ll need these the first time you order food",Kitchen:"food talk is great for everyday small talk",Outdoors:"weather and plans are classic small-talk topics",Animals:"pets and animals come up in friendly conversation"};
- return `<div class="note">🤖 <b>Astro’s report</b><div style="font-size:15px;line-height:1.55;margin-top:6px">${n?`You’ve learned <b>${n}</b> sentences so far. My pick for you: <b>${r.lv}</b>${r.th?` · <b>${r.th}</b>`:""}. `:`You haven’t started yet, so I’d begin with <b>${r.lv}</b>${r.th?` · <b>${r.th}</b>`:""}. `}${r.th?`You’ve practiced ${r.tl.l} of ${r.tl.t} of those, and ${why[r.th]||"it widens your vocabulary"}. `:""}It’s only a suggestion. Pick whatever you like.</div></div>`};
-{const _f=form;form=function(){_f();if(tab=="s")document.getElementById("app").insertAdjacentHTML("beforeend",window.astroReport())}}
-const NN_ALL=NN.slice();let artReady=false;
-const ctl=(p,t)=>{const f=ST[p=="mf"?"mf":"af"]||(ST[p=="mf"?"mf":"af"]={r:0,l:recLv().lv,t:"0"}),o=(a,v)=>a.map(x=>`<option value="${x[0]}"${String(x[0])==String(v)?" selected":""}>${x[1]}</option>`).join("");
- return `<div class="box"><label for="${p}_l">Level</label><select id="${p}_l">${o([["0","Any level"],["A1","A1"],["A2","A2"],["B1","B1"],["B2","B2"]],f.l)}</select><label for="${p}_r">Word range</label><select id="${p}_r">${o([[0,"Any"],[100,"First 100"],[200,"First 200"],[300,"First 300"],[500,"First 500"],[1000,"First 1000"]],f.r)}</select><label for="${p}_t">Theme</label><select id="${p}_t">${o([["0","Any theme"]].concat(THEMES.map(x=>[x,x])),f.t)}</select>${t?`<label for="mf_s">Time</label><select id="mf_s">${o([[30,"30 seconds"],[60,"60 seconds"],[120,"2 minutes"]],ST.mt||60)}</select>`:""}</div>`};
-document.addEventListener("change",e=>{const m=/^(mf|af)_([lrts])$/.exec(e.target.id);if(!m)return;const f=ST[m[1]]=ST[m[1]]||{r:0,l:"0",t:"0"},v=e.target.value;if(m[2]=="l")f.l=v;else if(m[2]=="r")f.r=+v;else if(m[2]=="t")f.t=v;else ST.mt=+v;save()});
-function artSetup(){document.getElementById("app").innerHTML=`<h2>der, die or das?</h2><p class="en">Choose which words to practice. Astro picked your level.</p>${ctl("af")}<p class="en" style="font-size:14px">Round length</p><div class="row">${[5,10,15,20].map(n=>`<button type="button" class="btn ${n==lim()?"p":""}" data-ax="s${n}">${n}</button>`).join("")}</div><button type="button" class="btn p" data-ax="start" style="margin-top:12px">Start</button>`}
-{const _r2=render;render=function(){artReady=false;_r2()}}
-{const _mp=mgPool;mgPool=function(){const f=ST.mf||(ST.mf={r:0,l:recLv().lv,t:"0"}),p=_p0().filter(w=>fl(f,w));return p.length>=8?p:_p0()};var _p0=_mp}
-{const _ms=mgSetup;mgSetup=function(){_ms();document.getElementById("app").insertAdjacentHTML("afterbegin",ctl("mf",true))}}
-{const _c=cardA;cardA=function(){if(!artReady)return artSetup();if(atot>=lim())return endArt();const f=ST.af||(ST.af={r:0,l:recLv().lv,t:"0"});let p=NN_ALL.filter(w=>fl(f,w));if(p.length<5)p=NN_ALL;NN.length=0;NN.push(...p);try{_c()}finally{NN.length=0;NN.push(...NN_ALL)}}}
-function endArt(){const p=atot?Math.round(asc/atot*100):0,tips=["Endings help: -ung, -heit, -keit, -schaft are always <b>die</b>.","-chen and -lein make a word <b>das</b> (das Mädchen, das Fensterlein).","Days, months and seasons are <b>der</b> (der Montag, der Sommer).","Many -er words for people are <b>der</b> (der Lehrer); -in makes it <b>die</b> (die Lehrerin).","Words from -ment, -um and -ma are usually <b>das</b>."];
- document.getElementById("app").innerHTML=`<div class="box"><h2>Round done</h2><p><b>${asc}/${atot}</b> correct (${p}%).</p><div class="note">🤖 <b>Astro:</b> ${p>=80?"Nice! Your ear for gender is getting sharp.":"Close! Tip: "+pick(tips)}</div><p class="en" style="font-size:14px">Round length</p><div class="row">${[5,10,15,20].map(n=>`<button type="button" class="btn ${n==lim()?"p":""}" data-ax="${n}">${n}</button>`).join("")}</div><button type="button" class="btn p" data-ax="again" style="margin-top:12px">Another round</button></div>`}
-document.addEventListener("click",e=>{const t=e.target.closest("[data-ax]");if(!t)return;const v=t.dataset.ax;if(v=="again"||v=="start"){artReady=true;asc=atot=cmb=0;cardA()}else if(v[0]=="s"){ST.alim=+v.slice(1);save();artSetup()}else{ST.alim=+v;save();endArt()}});
-// "?" help hub
-const HUB=[["📚","Learn","Flashcards for sentences and words, plus Build and der/die/das rounds. You rate each card and the app schedules your next review.","Open Sentences, press Start, flip one card and tap Good."],["⏱️","Match","A quick matching game to warm up.","Play one round."],["📖","Read","Short stories by level with English under each sentence.","Open any A1 story and read two sentences."],["🔎","Dictionary","Look up a word and hear it.","Search for “Haus”."],["🎓","Path","Your course: basics, A1, A2, dialogues, exams and your mistakes list.","Tap the big Continue button."],["📊","Progress","Streak, XP, coins, awards and settings (including Astro’s pop-ups).","Open Settings and look at the options."]];
-function hub(){let o=$("tour");if(!o){o=document.createElement("div");o.id="tour";o.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px";document.body.appendChild(o)}
- o.innerHTML=`<div style="background:var(--card,#1c1c1e);color:var(--fg,#fff);border:1px solid var(--bd,#333);border-radius:16px;padding:18px;max-width:440px;width:100%;max-height:85vh;overflow:auto"><h2 style="margin:0 0 4px">🤖 Hi, I’m Astro</h2><p class="en" style="margin:0 0 10px;font-size:14px">Tap a part of the site to see what it’s for and take a quick try.</p>${HUB.map((x,k)=>`<details class="note" style="margin:6px 0"><summary><b>${x[0]} ${x[1]}</b></summary><p style="margin:8px 0">${x[2]}</p><p style="margin:8px 0"><b>Try:</b> ${x[3]}</p><button type="button" class="btn p" data-hub="${x[1]}">Take me there</button></details>`).join("")}<button type="button" class="btn" data-hub="close" style="margin-top:8px">Close</button></div>`}
-document.addEventListener("click",e=>{const t=e.target.closest("[data-hub]");if(!t)return;const v=t.dataset.hub,o=$("tour");if(o)o.remove();if(v!="close")go(v)});
-const hb=$("helpb");if(hb)hb.onclick=hub;
-})();
+// Optional "online brain" for Astro (Vercel serverless function). 100% free options first.
+// Set ONE OR MORE of these in Vercel -> Project -> Settings -> Environment Variables, then redeploy:
+//   GROQ_API_KEY        (free tier at console.groq.com)
+//   GEMINI_API_KEY      (free tier at aistudio.google.com/apikey)
+//   OPENROUTER_API_KEY  (free models at openrouter.ai)
+//   ANTHROPIC_API_KEY   (paid)
+// Providers are tried in that order. ASTRO_MODEL overrides the model of the first provider that has a key.
+// Free-tier model names and limits change, so check each provider's docs if a provider stops answering.
+// With no key, this returns 501 and the site silently uses the built-in offline Astro / the on-device model.
+const MIN=8,DAY=40,hits=new Map();   // best-effort per-IP limits (memory resets on cold start)
+function limited(ip){const now=Date.now(),h=(hits.get(ip)||[]).filter(t=>now-t<864e5);const lastMin=h.filter(t=>now-t<6e4).length;if(lastMin>=MIN||h.length>=DAY){hits.set(ip,h);return true}h.push(now);hits.set(ip,h);if(hits.size>5000)hits.clear();return false}
+module.exports=async function(req,res){
+ res.setHeader("Cache-Control","no-store");
+ if(req.method!=="POST")return res.status(405).json({error:"method"});
+ const E=process.env;if(!(E.GROQ_API_KEY||E.GEMINI_API_KEY||E.OPENROUTER_API_KEY||E.ANTHROPIC_API_KEY))return res.status(501).json({error:"not_configured"});
+ const ip=String(req.headers["x-forwarded-for"]||req.socket&&req.socket.remoteAddress||"x").split(",")[0].trim();
+ if(limited(ip))return res.status(429).json({error:"slow_down"});
+ let b=req.body;if(typeof b==="string"){try{b=JSON.parse(b)}catch(e){b={}}}b=b||{};
+ let msgs=(Array.isArray(b.messages)?b.messages:[]).slice(-8).filter(m=>m&&(m.role==="user"||m.role==="assistant")&&typeof m.content==="string"&&m.content.trim()).map(m=>({role:m.role,content:m.content.slice(0,600)}));
+ const out=[];for(const m of msgs){if(out.length&&out[out.length-1].role===m.role)out[out.length-1].content+="\n"+m.content;else out.push(m)}
+ while(out.length&&out[0].role!=="user")out.shift();
+ if(!out.length||out[out.length-1].role!=="user")return res.status(400).json({error:"bad_request"});
+ const c=b.ctx||{},nm=String(c.name||"").replace(/[^\p{L}\- ]/gu,"").slice(0,24);
+ const system=`You are Astro, a warm, smart German coach inside the language-learning site "Astro 80/20" (the 80/20 idea: the most common German gets you most of the way). You are a friendly person: buddy, coach and teacher. You are not a robot and never describe yourself as an AI unless sincerely asked.
+${nm?`The learner is called ${nm}. Use their name occasionally, not in every message.`:"You don't know the learner's name yet."}
+Learner context: ${Number(c.learned)||0} sentences learned, streak ${Number(c.streak)||0} days, ${Number(c.mistakes)||0} open mistakes. Adjust difficulty: if they have learned few sentences, use simple words and short explanations.
+Rules: answer in clear English with German examples (with English translations). Keep replies short (at most about 120 words) unless asked for more. When asked how to say something, give the natural spoken version Germans actually use, plus the textbook version if it differs, and one tip on register (du/Sie, casual/formal). When the learner writes German, correct it gently: show the corrected sentence, then one short reason. Don't invent facts; if unsure, say so. Stay on topic: German language and learning. Plain text only, you may use **bold**. No lists longer than 4 items.`;
+ const M=E.ASTRO_MODEL,P=[];
+ if(E.GROQ_API_KEY)P.push(()=>oai("https://api.groq.com/openai/v1/chat/completions",E.GROQ_API_KEY,M||"llama-3.1-8b-instant"));
+ if(E.GEMINI_API_KEY)P.push(()=>gem(E.GEMINI_API_KEY,M||"gemini-2.0-flash"));
+ if(E.OPENROUTER_API_KEY)P.push(()=>oai("https://openrouter.ai/api/v1/chat/completions",E.OPENROUTER_API_KEY,M||"meta-llama/llama-3.3-70b-instruct:free"));
+ if(E.ANTHROPIC_API_KEY)P.push(()=>ant(E.ANTHROPIC_API_KEY,M||"claude-haiku-5-5"));
+ async function oai(url,key,model){const r=await fetch(url,{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+key},body:JSON.stringify({model,max_tokens:450,temperature:.5,messages:[{role:"system",content:system},...out]})});if(!r.ok)throw 0;const j=await r.json();return j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content}
+ async function gem(key,model){const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+model+":generateContent",{method:"POST",headers:{"content-type":"application/json","x-goog-api-key":key},body:JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:out.map(m=>({role:m.role==="assistant"?"model":"user",parts:[{text:m.content}]})),generationConfig:{maxOutputTokens:450,temperature:.5}})});if(!r.ok)throw 0;const j=await r.json();return(j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts||[]).map(p=>p.text||"").join("")}
+ async function ant(key,model){const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"content-type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01"},body:JSON.stringify({model,max_tokens:450,system,messages:out})});if(!r.ok)throw 0;const j=await r.json();return(j.content||[]).filter(x=>x.type==="text").map(x=>x.text).join("\n")}
+ for(const f of P){try{const t=String(await f()||"").trim();if(t)return res.status(200).json({reply:t.slice(0,1500)})}catch(e){}}
+ return res.status(502).json({error:"upstream"});
+};
