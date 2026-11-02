@@ -11,6 +11,8 @@
 //    "#app > .box", so re-rendering the SAME view on every tap would flash. See cardB() "again".
 // =====================================================================
 if(typeof BULK!=="undefined")S.push(...BULK);
+// Curriculum sentences (data-curriculum.js) go AFTER BULK and are never inserted earlier: saved progress is keyed by index in S.
+if(typeof CURR!=="undefined")S.push(...CURR);
 const TM={};
 `Home:Haus Stuhl Tisch Fenster Tür Wohnung Garten Bett Zimmer Schlüssel Licht Bild Wand Boden Treppe Dach Balkon Sofa Lampe Spiegel Bad Schrank Miete Nachbar Telefon
 Kitchen:Küche Brot Milch Messer Teller Pfanne Kühlschrank Gabel Löffel Glas Tasse Topf Ei Käse Butter Zucker Salz Reis Nudeln Tomate Zwiebel Kartoffel Apfel Rezept Ofen kochen lecker
