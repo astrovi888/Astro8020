@@ -1,7 +1,7 @@
 // First-visit tour + "?" help button. Pure addition.
 (function(){
 const ST_=[
-["Welcome to Astro 80/20 👋","Free German learning that teaches the most useful words and sentences first (the 80/20 idea: a small part of the language covers most of daily life). This 1-minute tour shows what everything is for."],
+["Welcome to Astrolingo 👋","Free German learning that teaches the most useful words and sentences first (the 80/20 idea: a small part of the language covers most of daily life). This 1-minute tour shows what everything is for."],
 ["📚 Learn","Practice sentences and words as flashcards. Tap to see the answer, then rate it: Again, Hard, Good or Easy. The app uses your answer to decide when to show that card again, so hard cards come back soon and easy ones later. That is why a little practice every day works."],
 ["⏱️ Match","A quick matching game to warm up and make words stick."],
 ["📖 Read","Short stories sorted by level, with English under every sentence. Reading shows you how words work together."],

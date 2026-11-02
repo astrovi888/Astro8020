@@ -7,8 +7,8 @@ const HANDLE="@axtroviii", IG_URL="https://instagram.com/axtroviii";   // Instag
 const CRYPTO_ADDR="", CRYPTO_NET="";   // TODO: paste your wallet address (and network, e.g. "USDT TRC20")
 const COFFEE_URL="", PATREON_URL="";   // TODO later
 const AD_CLIENT="", AD_SLOT="";        // TODO: Google AdSense ids (ca-pub-..., slot id). Ads stay hidden until set.
-const ABOUT_HTML=`<h2>About Astro 80/20</h2>
-<p>Astro 80/20 teaches German through real, useful sentences built from the most frequent words, so the first 20% of vocabulary gives you most of everyday German.</p>
+const ABOUT_HTML=`<h2>About Astrolingo</h2>
+<p>Astrolingo teaches German through real, useful sentences built from the most frequent words, so the first 20% of vocabulary gives you most of everyday German.</p>
 <p>Practice with spaced repetition, build sentences, drill der/die/das, and track your progress from A1 to B2.</p>
 <p><b>Creator.</b> Created by <b>Firas Smii (Astro)</b> to help those who can’t afford expensive education. Instagram &amp; WhatsApp: <a href="${IG_URL}" target="_blank" rel="noopener">${HANDLE}</a></p>
 <p><b>Sources and credits.</b> The 1,000 most common German words, their frequency order, English meanings and CEFR levels come from <a href="https://www.lenguia.com/tools/most-common-words/german" target="_blank" rel="noopener">Lenguia</a>. Sentences, grammar notes and starter stories were written for this site. Translation is provided by MyMemory. Pronunciation uses your device’s text-to-speech voice.</p>`;
@@ -68,9 +68,9 @@ function modal(m){
 <p><b>Translator.</b> Text you type into Translate is sent to MyMemory (translated.net) to get a translation. Please don’t enter personal or confidential information.</p>
 <p><b>Pronunciation.</b> Audio uses your browser’s text-to-speech. Some browsers use online voices from the browser vendor; that is handled by your browser, not by this site.</p>
 <p><b>Ads.</b> Ads are off by default. Only if you switch them on in Settings, an ad network (Google AdSense) loads and may set its own cookies. <b>What we don’t do.</b> No analytics or tracking scripts, and we never sell data. Our hosting providers (GitHub Pages and the script CDN) may log standard technical data such as IP addresses under their own policies.</p>
-<p><b>Your choices.</b> To have your account and data deleted, message ${HANDLE} on Instagram or WhatsApp. Clearing your browser data removes the local copy. Astro 80/20 is not intended for children under 13.</p>
+<p><b>Your choices.</b> To have your account and data deleted, message ${HANDLE} on Instagram or WhatsApp. Clearing your browser data removes the local copy. Astrolingo is not intended for children under 13.</p>
 <p class="lk">Last updated: October 2026.</p>`,
-  support:`<h2>Support the project</h2><p>Astro 80/20 is free. If it helps you, you can support the creator in small ways (even tiny amounts are appreciated):</p>
+  support:`<h2>Support the project</h2><p>Astrolingo is free. If it helps you, you can support the creator in small ways (even tiny amounts are appreciated):</p>
 ${CRYPTO_ADDR?`<div class="note"><b>Crypto${CRYPTO_NET?" ("+esc(CRYPTO_NET)+")":""}</b><div style="word-break:break-all;font:13px monospace;margin:6px 0">${esc(CRYPTO_ADDR)}</div><button type="button" class="btn" data-x="copyaddr">Copy address</button></div>`:`<div class="note"><b>Crypto</b><div class="en" style="font-size:14px">Wallet address coming soon.</div></div>`}
 <div class="note"><b>Buy me a coffee / Patreon</b><div class="en" style="font-size:14px">${COFFEE_URL||PATREON_URL?`${COFFEE_URL?`<a href="${COFFEE_URL}" target="_blank" rel="noopener">Coffee</a> `:""}${PATREON_URL?`<a href="${PATREON_URL}" target="_blank" rel="noopener">Patreon</a>`:""}`:"Coming later."}</div></div>
 <div class="note"><b>Optional ads</b><div class="en" style="font-size:14px">Prefer not to donate? Turn on clean, non-intrusive ads in Progress → Settings. Off by default.</div></div>

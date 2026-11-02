@@ -1,3 +1,15 @@
+// =====================================================================
+// Astrolingo core app (sentences, flashcards, build, articles, progress).
+// NOTE FOR EDITORS:
+//  - The product was renamed from "Astro 80/20" to "Astrolingo". Only user-facing text changed.
+//  - INTERNAL ids deliberately keep the old name: the localStorage key "a8020" (see load()/save()).
+//    Renaming that key would make every existing user lose their saved progress. Do NOT rename it
+//    unless you also write a migration that copies the old value to the new key first.
+//  - This file is loaded as a plain <script> (no modules); later files (features.js, path.js, ...)
+//    wrap/override functions defined here (render, A.chk, ...). Keep function names stable.
+//  - Views are drawn by replacing app.innerHTML. style.css plays an enter animation on every new
+//    "#app > .box", so re-rendering the SAME view on every tap would flash. See cardB() "again".
+// =====================================================================
 if(typeof BULK!=="undefined")S.push(...BULK);
 const TM={};
 `Home:Haus Stuhl Tisch Fenster Tür Wohnung Garten Bett Zimmer Schlüssel Licht Bild Wand Boden Treppe Dach Balkon Sofa Lampe Spiegel Bad Schrank Miete Nachbar Telefon
@@ -18,6 +30,7 @@ function ex(w){const s=S.find(s=>toks(s[0]).includes(w.de.toLowerCase()));return
 
 const $=id=>document.getElementById(id),app=$("app"),MEM={};
 const dflt={cards:{},xp:0,streak:0,best:0,last:"",hist:{},dir:"en2de",hw:{},art:{},today:{d:"",n:0},goal:10,f:{r:"0",l:"0",t:"0",n:"10"}};
+// Storage key "a8020" is the OLD product name on purpose - changing it would wipe users' progress (see header).
 function load(){try{const r=localStorage.getItem("a8020");if(r)return JSON.parse(r)}catch(e){}return MEM.s}
 let ST=Object.assign({},dflt,load()||{}),DOC=null,tm=0,tab="s",q=[],i=0,gain=0,bank=[],out=[],bmsg="",an=null,asc=0,atot=0,cmb=0,ses={},bshow=false;
 function save(){try{localStorage.setItem("a8020",JSON.stringify(ST))}catch(e){}MEM.s=ST;typeof pushSoon=="function"&&pushSoon();if(DOC){clearTimeout(tm);tm=setTimeout(()=>DOC.set({s:JSON.stringify(ST)}).catch(()=>{}),1500)}}
@@ -110,13 +123,17 @@ function cardW(){
  <div style="text-align:center"><span class="tg">#${w.rank}</span><span class="tg">${w.lv}</span><span class="tg">${POS[w.pos]}</span></div>${w.art?`<div class="note">Learn it as <b>${w.art} ${w.de}</b>, never the word alone.</div>`:""}${ex(w)}</div>
  <div id="rv"><button class="btn p" data-a="rev">Reveal answer</button></div>${rt("w"+w.rank)}</div>`;
 }
+// lastB remembers which Build card was drawn last. Tapping a word chip redraws the same card; we mark that
+// redraw with class "nr" (no-replay) so the CSS enter animation does not flash on every tap.
+let lastB="";
 function cardB(){
- const s=S[q[i]];
+ const s=S[q[i]],again=lastB===i+":"+q[i];lastB=i+":"+q[i];
  if(!bank.length&&!out.length)bank=shuf(s[0].split(" ").map((w,k)=>({w,k})));
  const ch=(a,l)=>l.map(c=>`<button class="chip" data-a="${a}" data-v="${c.k}">${c.w}</button>`).join("");
  app.innerHTML=`<div class="box">${head(`${s[3]} · ${s[4]}`)}<div class="sent" style="min-height:0">${s[1]}</div>
  <div class="box" style="min-height:58px;padding:10px;margin-bottom:12px">${ch("un",out)}</div><div>${ch("up",bank)}</div><div style="min-height:50px;margin:8px 0">${bmsg}</div>
  <div class="row"><button class="btn" data-a="show">Show answer</button><button class="btn p" data-a="chk">Check</button></div></div>`;
+ if(again&&app.firstElementChild)app.firstElementChild.classList.add("nr");
 }
 function cardA(){
  const w=[];NN.forEach(n=>{const a=ST.art[n.de]||{ok:0,bad:0},k=Math.max(1,Math.round(2+3*a.bad-a.ok/2));for(let j=0;j<k;j++)w.push(n)});

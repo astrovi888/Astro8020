@@ -101,3 +101,131 @@ body.wm .wt{text-decoration:underline dotted;text-decoration-color:rgba(160,160,
 .cbt{padding:9px 12px;border-radius:14px;line-height:1.45;font-size:15px;background:rgba(127,127,150,.18)}.cb.u .cbt{background:#4f46e5;color:#fff}
 .crow{display:flex;gap:8px;align-items:flex-end}.crow textarea{flex:1;font:inherit;background:var(--bg,#111);color:var(--fg,#fff);border:1px solid var(--bd,#333);border-radius:12px;padding:10px;resize:none;max-height:90px}
 @media (prefers-reduced-motion:reduce){#gbox{animation:none}}
+
+
+/* =====================================================================
+   v7 MOTION LAYER  (Astrolingo)
+   ---------------------------------------------------------------------
+   HOW TO EDIT THIS SECTION (read before changing anything):
+   1. It is PURE ADDITION at the end of the file. Earlier rules are untouched, and these rules win only
+      because they come later (or have higher specificity). To roll the whole motion layer back, delete
+      everything from this comment to the end of the file.
+   2. WHY IT FEELS SMOOTH: every animation below changes ONLY `transform` and `opacity`. Browsers run
+      those on the GPU compositor, off the main thread, at the screen's native refresh rate (60/90/120 Hz,
+      e.g. iPhone ProMotion). Do not animate width/height/top/left/margin here: they force layout every
+      frame and drop frames. (The tiny progress bars are the one exception, kept as before.)
+   3. WHY IT FEELS LIKE iOS: (a) --ease-ios is the curve iOS uses for sheets and screen pushes: starts fast,
+      lands very softly. (b) --ease-spring overshoots slightly and settles, like a real spring. (c) press
+      feedback is fast going IN (.08s) and springy coming OUT (.5s), which is the key to a "satisfying" tap.
+   4. ACCESSIBILITY: the @media (prefers-reduced-motion) block at the very end switches the new motion off
+      for people who ask their device for less motion. Every new animation must be listed there too.
+   5. If you add a new animated element: use the tokens below, animate transform/opacity only, add it to
+      the reduced-motion list, and test in light AND dark mode.
+   ===================================================================== */
+:root{
+  --ease-ios:cubic-bezier(.32,.72,0,1);          /* iOS sheet / push curve */
+  --ease-out:cubic-bezier(.22,1,.36,1);          /* general soft landing */
+  --ease-spring:cubic-bezier(.34,1.56,.64,1);    /* fallback spring: one small overshoot */
+}
+/* Real spring curve for browsers that support linear() (Safari 17.2+, Chrome 113+, Firefox 112+).
+   Older browsers keep the cubic-bezier fallback above, so nothing breaks anywhere. */
+@supports (transition-timing-function:linear(0,1)){
+  :root{--ease-spring:linear(0,.009,.035 2.1%,.141,.281 6.7%,.723 12.9%,.938 16.7%,1.017,1.077,1.121,1.149 24.3%,1.159,1.163,1.161,1.154 29.9%,1.129 32.8%,1.051 39.6%,1.017 43.1%,.991,.977 51%,.974 53.8%,.975 57.1%,.997 69.8%,1.003 76.9%,1 100%)}
+}
+
+/* ---- Snappier taps: removes the old mobile 300 ms tap delay and the grey tap flash. ---- */
+.btn,.chip,.tile,.item,.seg button,.spk,.bb button,.afab,#gbox,nav button,.x{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+
+/* ---- Screen enter: every new view (#app > .box / .seg) rises in with an iOS curve. ----
+   Only a `from` keyframe is given on purpose: the end state is whatever the element's normal CSS says. */
+@keyframes rise{from{opacity:0;transform:translate3d(0,14px,0) scale(.985)}}
+#app>.box,#app>.seg{animation:rise .42s var(--ease-ios)}
+/* "nr" = same view redrawn (set by cardB() in app.js when a word chip is tapped): don't replay. */
+#app>.box.nr{animation:none}
+/* BUGFIX: the old rule `.shake{...}` lost to `#app>.box{animation:...}` (an id selector is stronger), so the
+   wrong-answer shake never played. This selector is stronger than both, so the shake works again. */
+#app>.box.shake{animation:sh .38s var(--ease-out)}
+/* Answer reveal (after "Reveal answer") and the opened "How Germans really say it" panel. */
+#ans:not(.hide){animation:rise .34s var(--ease-ios)}
+details[open]>:not(summary){animation:rise .34s var(--ease-ios)}
+
+/* ---- Lists and stat tiles cascade in, 40 ms apart (first 8 only, so long lists never feel slow). ---- */
+@keyframes rise-sm{from{opacity:0;transform:translate3d(0,10px,0)}}
+.grid>.stat,.item,.ach>.ac{animation:rise-sm .5s var(--ease-ios) backwards}
+.grid>.stat:nth-child(2),.item:nth-child(2),.ach>.ac:nth-child(2){animation-delay:.04s}
+.grid>.stat:nth-child(3),.item:nth-child(3),.ach>.ac:nth-child(3){animation-delay:.08s}
+.grid>.stat:nth-child(4),.item:nth-child(4),.ach>.ac:nth-child(4){animation-delay:.12s}
+.item:nth-child(5),.ach>.ac:nth-child(5){animation-delay:.16s}
+.item:nth-child(6),.ach>.ac:nth-child(6){animation-delay:.2s}
+.item:nth-child(7),.ach>.ac:nth-child(7){animation-delay:.24s}
+.item:nth-child(n+8),.ach>.ac:nth-child(n+8){animation-delay:.28s}
+
+/* ---- Progress bars: grow with the iOS curve (kept as a width animation so the markup stays unchanged). ---- */
+.bar i{animation:grow .8s var(--ease-ios)}
+
+/* ---- Press feedback: quick squeeze in, springy release. ----
+   Trick: the transition declared on the BASE state runs when you let go (slow spring);
+   the one on :active runs when you press (fast). */
+.btn,.chip,.tile,.item,.seg button,.spk{transition:transform .5s var(--ease-spring),background-color .2s,border-color .2s,color .2s,box-shadow .2s,opacity .2s}
+.btn:active,.chip:active,.tile:active,.item:active,.seg button:active,.spk:active{transition-duration:.08s,.2s,.2s,.2s,.2s,.2s;transition-timing-function:var(--ease-out)}
+.btn:active,.item:active,.tile:active{transform:scale(.97)}
+.chip:active,.spk:active{transform:scale(.93)}
+.afab{transition:transform .5s var(--ease-spring),opacity .2s}
+.afab:active{transform:scale(.9);transition-duration:.08s}
+.afab:hover{opacity:1}
+.wt{transition:background-color .2s}
+
+/* ---- Bottom tab bar: translucent "glass" like iOS (only where the browser supports it; otherwise stays
+   the solid colour it always was) and the active icon pops. ---- */
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) and (background:color-mix(in srgb,red,blue)){
+  .bb{background:color-mix(in srgb,var(--card) 80%,transparent);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px)}
+}
+.bb button{transition:transform .5s var(--ease-spring),color .2s,background-color .25s}
+.bb button:active{transition-duration:.08s,.2s,.25s;transform:scale(.9)}
+@keyframes tabpop{0%{transform:scale(.7)}100%{transform:scale(1)}}
+.bb button.on i{animation:tabpop .55s var(--ease-spring)}
+
+/* ---- Bottom sheet (word look-ups, wallet, Astro chat; opened by openSheet() in persona.js). ----
+   `#sheet` toggles display:none <-> block, so these animations replay on every open.
+   Closing is still instant (closeSheet() empties the box). A closing animation needs a small JS change;
+   careful: economy.js/wordtap.js call closeSheet() and openSheet() back to back. */
+@keyframes sheet-up{from{transform:translate3d(0,100%,0)}}
+@keyframes fade-in{from{opacity:0}}
+#sheet.on .sh-bd{animation:fade-in .3s ease-out}
+#sheet.on .sh-box{animation:sheet-up .5s var(--ease-ios);overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+
+/* ---- Login / About / Privacy modal (.md; opened by modal() in sync.js, which removes the .hide class). ---- */
+@keyframes modal-in{from{opacity:0;transform:translate3d(0,18px,0) scale(.94)}}
+.md:not(.hide){animation:fade-in .25s ease-out}
+.md:not(.hide) .mb{animation:modal-in .5s var(--ease-spring)}
+
+/* ---- Chat bubbles pop from the side they belong to (astro-chat.js appends one .cb per message). ---- */
+@keyframes bubble-in{from{opacity:0;transform:translate3d(0,8px,0) scale(.9)}}
+.cb{animation:bubble-in .45s var(--ease-spring)}
+.cb.u{transform-origin:100% 100%}
+.cb.a{transform-origin:0 100%}
+#cmsgs{overscroll-behavior:contain;scroll-behavior:smooth}
+
+/* ---- XP / toast pill: springs up, holds, floats away. (Keyframe name must differ from the old `pp`/`pp2`.) ---- */
+@keyframes toast-spring{
+  0%{opacity:0;transform:translate(-50%,14px) scale(.9)}
+  14%{opacity:1;transform:translate(-50%,-2px) scale(1.04)}
+  24%{transform:translate(-50%,0) scale(1)}
+  80%{opacity:1;transform:translate(-50%,0) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-14px) scale(.97)}
+}
+#pop.go{animation:toast-spring 1.25s var(--ease-out)}
+
+/* ---- Smooth anchor/scroll jumps (not for reduced motion; see below). ---- */
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+
+/* ---- Reduced motion: respect the device setting. Keep this list in sync with the rules above. ---- */
+@media (prefers-reduced-motion:reduce){
+  #app>.box,#app>.seg,#ans,details[open]>:not(summary),.grid>.stat,.item,.ach>.ac,.bar i,.bb button.on i,
+  #sheet.on .sh-bd,#sheet.on .sh-box,.md:not(.hide),.md:not(.hide) .mb,.cb,#app>.box.shake{animation:none!important}
+  .btn,.chip,.tile,.item,.seg button,.spk,.bb button,.afab,.wt{transition:none!important}
+  .btn:active,.chip:active,.tile:active,.item:active,.seg button:active,.spk:active,.bb button:active,.afab:active{transform:none}
+  #cmsgs{scroll-behavior:auto}
+  /* Toast must still appear briefly: fade only, no movement (same as the original reduced-motion rule). */
+  #pop.go{animation:pp2 1.1s steps(1)}
+}

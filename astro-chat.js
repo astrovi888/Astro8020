@@ -4,6 +4,9 @@ const $$=id=>document.getElementById(id);
 // Flip to true later to show "Smarter Astro" (on-device model) and use /api/astro. Off = plain rule-based Astro that needs nothing.
 const AI=false;   // on-device model UI: leave off
 const ONLINE=true;   // use the Astro backend (/api/astro on Vercel). Falls back to the offline Astro automatically.
+// NOTE: "astro8020.vercel.app" is the real deployed backend address (named after the old project name).
+// It is NOT display text. Only change it if you deploy the Vercel function under a new domain; also update
+// ALLOWED_ORIGINS in api/astro.js if the site address changes.
 const API=window.ASTRO_API||(/github\.io$/.test(location.hostname)?"https://astro8020.vercel.app/api/astro":"/api/astro");
 
 /* ============ Real life German (Learn → Real life) ============ */
