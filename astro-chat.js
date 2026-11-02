@@ -107,8 +107,8 @@ async function ask(text){if(busyC)return;text=text.trim();if(!text)return;busyC=
  CH.push({r:"u",h:esc(text)});bubble("u",esc(text));
  if(askName){askName=false;const n=setName(text);if(n){const h=fmt(`Nice to meet you, ${n}! Ask me anything about German, or tell me how you want to practice.`);CH.push({r:"a",h});bubble("a",h);busyC=false;return}}
  const t=bubble("a","<span class='en'>…</span>");let out=null,paid=0;
- if(AI&&online!==false){const ch=ecoChatCharge();if(ch.ok){paid=ch.cost;try{const r=await fetch("/api/astro",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:CH.slice(-8).map(m=>({role:m.r=="u"?"user":"assistant",content:(m.raw||m.h).replace(/<br>/g,"\n").replace(/<[^>]+>/g,"").replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"')})),ctx:ctx()})});
-   if(r.ok){const j=await r.json();if(j&&j.reply){online=true;out=j.reply}}else if(r.status==404||r.status==501||r.status==503)online=false}catch(e){online=online===true?true:false}
+ if(AI&&online!==false){const ch=ecoChatCharge();if(ch.ok){paid=ch.cost;try{const r=await fetch(window.ASTRO_API||"/api/astro",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:CH.slice(-8).map(m=>({role:m.r=="u"?"user":"assistant",content:(m.raw||m.h).replace(/<br>/g,"\n").replace(/<[^>]+>/g,"").replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"')})),ctx:ctx()})});
+   if(r.ok){const j=await r.json();if(j&&j.reply){online=true;out=j.reply}}else if(r.status==403||r.status==404||r.status==501||r.status==503)online=false}catch(e){online=online===true?true:false}
    if(!out&&paid){ST.cs=Math.max(0,(ST.cs||0)-paid);save();topbar()}}
   else{t.querySelector(".cbt").innerHTML=fmt(`That’s ${ecoCost.chat} 🪙 per message after your ${5} free ones today, and you’re short on coins. I can still answer the basics for free, like “how do I say…” and grammar questions.`);busyC=false;CH.push({r:"a",h:t.querySelector(".cbt").innerHTML});return}}
  if(!out){const kb=localReply(text);if(AI&&eng&&/Smarter Astro/.test(kb)){try{out=await llmAsk()}catch(e){}}out=out||kb}
