@@ -24,6 +24,8 @@
 // =====================================================================
 (function(){
 const LV=["A1","A2","B1","B2"],PER=10,NEED=.7,QN=15,PASS=12;
+// Other scripts (insights.js, speak.js) add cards to the Learn screen through window.CRX = {top:[fn], mid:[fn]}; each fn returns HTML.
+const ext=n=>((window.CRX||{})[n]||[]).map(f=>{try{return f()||""}catch(e){return ""}}).join("");
 let live=null,T=null,viewL=null,calM=null,showAll=false;      // live lesson, running test, shown level, calendar month
 
 /* ---------- state helpers ---------- */
@@ -106,22 +108,29 @@ function startTest(L,ladder){
  if(!unlocked(L)||CR().passed[L])return;
  const st=lvStat(L);
  if(!ladder&&st.frac<NEED)return pop(`Finish ${Math.ceil(NEED*st.total)-st.done} more lessons to unlock the ${L} test`);
- live=null;T={L,qs:buildTest(L),n:0,ok:0,miss:[],ladder:!!ladder,ans:-1};tab="c";testView()
+ live=null;T={L,qs:buildTest(L),n:0,ok:0,miss:[],ladder:!!ladder,ans:-1,times:[],left:0,t0:0};tab="c";testView()
 }
 function testView(){
  const x=T.qs[T.n],done=T.ans>=0;
+ if(!done)T.t0=Date.now();   // start the stopwatch for this question (used by the integrity check in testEnd)
  app.innerHTML=`<div class="box"><div class="meta"><button type="button" class="chip" data-cr="quit" style="margin:0">← Quit</button><span>${T.n+1} / ${T.qs.length}</span><span>${T.L} test</span></div>
  <div class="bar"><i style="width:${T.n/T.qs.length*100}%"></i></div>
  <p class="en" style="margin:14px 0 6px">${x.lab}</p><div class="sent" style="min-height:0">${esc2(x.p)}</div>
  <div style="margin-top:14px">${x.o.map((o,j)=>`<button type="button" class="btn cr-opt${done?(j==x.a?" good":j==T.ans?" bad":""):""}" data-cr="ans:${j}" ${done?"disabled":""} style="margin:6px 0;text-align:left">${esc2(o)}</button>`).join("")}</div>
- ${done?`<div class="note"><b>${T.ans==x.a?"Richtig!":"Not quite."}</b><div>${esc2(x.de)}</div><div class="en" style="font-size:15px">${esc2(x.en)}</div></div><button type="button" class="btn p" data-cr="tnext" style="margin-top:10px">${T.n+1>=T.qs.length?"See result":"Next"}</button>`:""}</div>`
+ ${done?`<div class="note"><b>${T.ans==x.a?"Richtig!":"Not quite."}</b><div>${esc2(x.de)}</div><div class="en" style="font-size:15px">${esc2(x.en)}</div></div><button type="button" class="btn p" data-cr="tnext" style="margin-top:10px">${T.n+1>=T.qs.length?"See result":"Next"}</button>`:""}</div>`;
+ if(done)app.firstElementChild.classList.add("nr")   // same question redrawn after answering: do not replay the enter animation
 }
+// INTEGRITY CHECK. This is a static site, so nothing here can stop a determined cheater who edits browser storage.
+// What it does: a pass only counts if answers were not impossibly fast (median < 0.9 s) and the learner did not
+// leave the page more than once mid-question. Every attempt is logged in ST.course.tests (shown in My profile).
 function testEnd(){
- const L=T.L,pass=T.ok>=PASS,idx=LV.indexOf(L),nx=LV[idx+1];
+ const L=T.L,idx=LV.indexOf(L),nx=LV[idx+1],tm=T.times.slice().sort((a,b)=>a-b),med=tm.length?tm[tm.length>>1]:0,
+  flag=T.left>=2||med<900,pass=T.ok>=PASS&&!flag;
+ (CR().tests=CR().tests||[]).push({L,ok:T.ok,n:T.qs.length,d:day(),ms:med,left:T.left,flag:flag?1:0});CR().tests=CR().tests.slice(-30);
  if(pass){CR().passed[L]=day();ST.ce=(ST.ce||0)+25;save();try{burst();sfx.ach()}catch(e){}}
  app.innerHTML=`<div class="box cr-end"><div style="text-align:center">${typeof astroPose=="function"?astroPose(pass?"celebrate":"confused",96):""}</div>
  <div class="sent" style="min-height:0;text-align:center">${pass?`${L} passed!`:"Not this time"}</div>
- <p class="en" style="text-align:center;margin:0 0 10px">${T.ok} of ${T.qs.length} right. You need ${PASS} (80%).${pass?` +25 🪙 ${nx?`${nx} is now unlocked.`:"You finished the whole path!"}`:""}</p>
+ <p class="en" style="text-align:center;margin:0 0 10px">${T.ok} of ${T.qs.length} right. You need ${PASS} (80%).${flag&&T.ok>=PASS?" We could not verify this attempt (answers were extremely fast, or you left the page). Please retake it calmly.":""}${pass?` +25 🪙 ${nx?`${nx} is now unlocked.`:"You finished the whole path!"}`:""}</p>
  ${T.miss.length?`<div class="note"><b>${pass?"Missed":"Review these"}</b>${T.miss.map(m=>`<div style="margin-top:6px">${esc2(m.de)}<div class="en" style="font-size:14px">${esc2(m.en)}</div></div>`).join("")}</div>`:""}
  <div class="row" style="margin-top:14px"><button class="btn" data-cr="home">Back to path</button>${pass&&nx&&T.ladder?`<button class="btn p" data-cr="ladder">Test ${nx} next</button>`:pass?"":`<button class="btn p" data-cr="test">Retake test</button>`}</div></div>`;
  T=null
@@ -169,8 +178,9 @@ function courseView(){
  ${passed?`<div class="note" style="margin-top:12px"><b>✓ ${L} passed</b><div class="en" style="font-size:14px">${c.passed[L]}</div></div>`:`<div class="note" style="margin-top:12px"><b>🏆 ${L} test</b><div class="en" style="font-size:14px">${testOK?`Unlocked. Pass it (12 of 15) to unlock ${LV[LV.indexOf(L)+1]||"the finish line"}.`:`Unlocks after ${needMore} more lesson${needMore==1?"":"s"}. Move up only by proving it.`}</div>
  <button class="btn${testOK?" p":""}" data-cr="test" style="margin-top:8px"${testOK?"":" disabled"}>Take the ${L} test</button>
  ${L=="A1"&&st.done<3?`<button class="btn" data-cr="placement" style="margin-top:8px">I know some German. Test me from A1</button>`:""}</div>`}
+ ${ext("top")}
  <div class="cr-path">${a>0?`<button type="button" class="chip" data-cr="all">Show earlier lessons</button>`:""}${path}${b<st.n.length?`<button type="button" class="chip" data-cr="all">Show all ${st.n.length} lessons</button>`:""}</div>
- ${calendar()}${topics()}
+ ${ext("mid")}${calendar()}${topics()}
  <div class="box" style="margin-top:14px"><b>⏰ Daily reminder</b><p class="en" style="margin:2px 0 8px;font-size:14px">Adds a repeating event to your calendar app.</p>
  <div class="row"><select id="cr-t" aria-label="Reminder time"><option value="08:00">8:00</option><option value="12:30">12:30</option><option value="18:00">18:00</option><option value="19:00" selected>19:00</option><option value="21:00">21:00</option></select><button class="btn" data-cr="ics">Add reminder</button></div></div>`
 }
@@ -180,8 +190,8 @@ function reminder(){
  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([ics],{type:"text/calendar"}));a.download="astrolingo-reminder.ics";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)
 }
 function more(){
- openSheet(`<div style="padding:4px 2px"><b style="font-size:18px">More</b><div style="height:8px"></div>
- ${[["m","⏱️","Word Match Blitz"],["r","📖","Read stories"],["d","🔎","Dictionary and translate"],["l","🎓","Classic lessons and dialogues"],["set","⚙️","Settings"],["ab","ℹ️","About Astrolingo"]].map(([k,i2,t])=>`<button type="button" class="btn" data-cr="go:${k}" style="text-align:left;margin:6px 0">${i2} ${t}</button>`).join("")}</div>`)
+ openSheet(`<div style="padding:4px 2px;max-height:70vh;overflow:auto"><b style="font-size:18px">More</b><div style="height:8px"></div>
+ ${[["u","📈","My profile and weak spots"],["k","🎤","Speaking practice"],["m","⏱️","Word Match Blitz"],["r","📖","Read stories"],["d","🔎","Dictionary and translate"],["l","🎓","Classic lessons and dialogues"],["set","⚙️","Settings"],["ab","ℹ️","About Astrolingo"]].map(([k,i2,t])=>`<button type="button" class="btn" data-cr="go:${k}" style="text-align:left;margin:6px 0">${i2} ${t}</button>`).join("")}</div>`)
 }
 function goTo(k){
  try{closeSheet()}catch(e){}
@@ -205,10 +215,11 @@ const A={
  review(){startReview()},
  test(){const L=(live&&live.L)||(T&&T.L)||viewL||cur();startTest(L==="done"?"B2":(CR().passed[L]?cur():L),false)},
  quit(){T=null;A.home()},
- ans(j){if(!T||T.ans>=0)return;T.ans=+j;const x=T.qs[T.n];if(T.ans==x.a){T.ok++;try{sfx.good()}catch(e){}}else{T.miss.push(x);try{sfx.bad()}catch(e){}}testView()},
+ ans(j){if(!T||T.ans>=0)return;T.times.push(Date.now()-T.t0);T.ans=+j;const x=T.qs[T.n];if(T.ans==x.a){T.ok++;try{sfx.good()}catch(e){}}else{T.miss.push(x);try{sfx.bad()}catch(e){}}testView()},
  tnext(){if(!T)return;T.n++;T.ans=-1;T.n>=T.qs.length?testEnd():testView()},
  more(){more()},go(k){goTo(k)},ics(){reminder()}
 };
+document.addEventListener("visibilitychange",()=>{if(T&&document.hidden&&T.ans<0)T.left++});
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-cr]");if(!b||b.disabled)return;const p=b.dataset.cr.split(":"),f=A[p[0]];if(f){e.preventDefault();f(...p.slice(1))}});
 
 /* ---------- wrappers around earlier scripts ---------- */

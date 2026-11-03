@@ -44,3 +44,8 @@ Defined in `course.js` (read its header comment first). Summary:
 
 ## Install and offline
 `manifest.webmanifest`, `sw.js` and the icons make the site installable and available offline after one visit. `sw.js` is network-first, so updates are never stuck behind a cache.
+
+## Profile, weak spots and speaking (insights.js, speak.js)
+- **insights.js**: every flashcard rating is logged in `ST.ev` (newest 600). From it and `ST.cards` the site derives, live, the learner's weak cards, weakest topics and article accuracy. It powers the "For you" card on the Learn screen, "Fix weak cards" lessons and the My profile page (More > My profile). Nothing is stored twice, so weak spots update as soon as the learner improves.
+- **speak.js**: Speaking practice (More > Speaking practice) plus an optional "Say it" mic button on normal flashcards. Uses the browser's SpeechRecognition (Chrome, Edge, Safari 14.5+; needs HTTPS, internet and microphone permission). Browsers without it fall back to self-check mode automatically. Matching is forgiving on purpose (see `wordOK` / `sentOK`). Results go to `ST.sp`.
+- **Test integrity** (course.js `testEnd`): a pass only counts if the median answer time is over 0.9 s and the learner did not leave the page more than once mid-question. All attempts are logged in `ST.course.tests`. This is a static site, so it cannot stop someone who edits browser storage. A real anti-cheat would need server-side checks.

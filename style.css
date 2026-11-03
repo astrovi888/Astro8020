@@ -273,12 +273,35 @@ body.astro-off .afab,body.astro-off #asay,body.astro-off #gbox{display:none!impo
 .cr-d.on{background:color-mix(in srgb,#f97316 18%,var(--card))}
 .cr-d.today{box-shadow:0 0 0 2px var(--ac) inset;font-weight:700}
 .cr-d.fut{opacity:.35}
-.cr-tops{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cr-tops{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .cr-top{font:inherit;color:var(--fg);display:flex;align-items:center;gap:10px;padding:8px;text-align:left;border-radius:12px;border:1px solid var(--bd);background:var(--card);cursor:pointer}
-.cr-top span{display:flex;flex-direction:column;line-height:1.2;font-size:14px}.cr-top small{color:var(--mut);font-size:12px}
+.cr-top span{display:flex;flex-direction:column;line-height:1.2;font-size:14px;min-width:0;flex:1}.cr-top small{color:var(--mut);font-size:12px}
 .cr-opt.good{border-color:var(--das);background:color-mix(in srgb,var(--das) 16%,var(--card))}
 .cr-opt.bad{border-color:#ef4444;background:color-mix(in srgb,#ef4444 14%,var(--card))}
 .cr-end .apose{display:block;margin:0 auto 6px}
 @media (prefers-reduced-motion:reduce){.cr-node.cur::after{animation:none}.cr-node{transition:none}}
-.cr-top svg{flex:none}
-.cr-top b{font-size:14px;word-break:normal;overflow-wrap:anywhere}
+.cr-top svg{width:36px;height:36px;flex:none}
+.cr-top b{font-size:13px;overflow-wrap:break-word;hyphens:auto}
+
+
+/* =====================================================================
+   v10 SPEAKING PRACTICE (speak.js). Animations use transform/opacity only; reduced-motion switches them off.
+   ===================================================================== */
+.sp-card{position:relative;margin:18px 0 4px;min-height:230px;border-radius:26px;border:2px solid var(--bd);background:var(--card);display:flex;align-items:center;justify-content:center;text-align:center;padding:22px;transition:border-color .2s,background-color .2s}
+.sp-card::before{content:"";position:absolute;left:20px;right:20px;top:-9px;height:12px;border:2px solid var(--bd);border-bottom:0;border-radius:22px 22px 0 0;opacity:.7;pointer-events:none}
+.sp-t{font-size:34px;font-weight:700;line-height:1.2;overflow-wrap:anywhere}
+.sp-t.good{color:var(--das)}
+.sp-l{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.sp-s{color:var(--mut);font-size:16px}
+.sp-ok{margin-top:12px;color:var(--das);font-weight:700}
+.sp-no{margin-top:12px;color:#ef4444;font-size:15px}
+.sp-card.good{border-color:var(--das);background:color-mix(in srgb,var(--das) 10%,var(--card))}
+.sp-card.bad{border-color:#ef4444;background:color-mix(in srgb,#ef4444 10%,var(--card));animation:sh .38s var(--ease-out)}
+.sp-card.flip{animation:sp-flip .45s var(--ease-ios)}
+@keyframes sp-flip{from{transform:rotateY(90deg);opacity:0}}
+.sp-mic{flex:1;min-height:60px;font-weight:700;background:#38bdf8;border-color:#38bdf8;color:#04243a;box-shadow:0 5px 0 #0ea5e9}
+.sp-mic:active{transform:translateY(3px);box-shadow:0 2px 0 #0ea5e9}
+.sp-mic.on{animation:sp-pulse 1s ease-in-out infinite}
+@keyframes sp-pulse{50%{transform:scale(.97);opacity:.85}}
+.sp-aud{flex:0 0 64px;width:64px;font-size:22px}
+@media (prefers-reduced-motion:reduce){.sp-card.bad,.sp-card.flip,.sp-mic.on{animation:none!important}}
