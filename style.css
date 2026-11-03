@@ -42,7 +42,7 @@ input:focus-visible{outline:2px solid var(--der);outline-offset:2px}
 .md{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:30}.md.hide{display:none}
 .mb{width:100%;max-width:400px;max-height:90vh;overflow:auto;position:relative}.mb h2{margin:0 0 6px;font-size:20px}
 .x{position:absolute;top:8px;right:10px;background:none;border:0;color:var(--mut);font-size:26px;cursor:pointer;line-height:1}
-.lk{font-size:14px;color:var(--mut)}a{color:inherit}#ft{text-align:center;font-size:13px;color:var(--mut);margin-top:8px}
+.lk{font-size:14px;color:var(--mut)}a{color:inherit}#foot{text-align:center;font-size:13px;color:var(--mut);margin-top:8px}
 
 #app>.box,#app>.seg{animation:in .28s ease-out}@keyframes in{from{opacity:0;transform:translateY(8px)}}
 #ans:not(.hide){animation:in .25s ease-out}.bar i{animation:grow .7s cubic-bezier(.2,.8,.2,1)}@keyframes grow{from{width:0}}
@@ -229,3 +229,56 @@ details[open]>:not(summary){animation:rise .34s var(--ease-ios)}
   /* Toast must still appear briefly: fade only, no movement (same as the original reduced-motion rule). */
   #pop.go{animation:pp2 1.1s steps(1)}
 }
+
+
+/* ---- v8: Astro is OFF by default. body.astro-off is toggled by astroVis() in features.js (Settings > Show Astro).
+   Hides the round chat button, the speech bubble and the surprise gift so they never cover the Next button. ---- */
+body.astro-off .afab,body.astro-off #asay,body.astro-off #gbox{display:none!important}
+
+
+/* =====================================================================
+   v9 COURSE UI (course.js) + brand accent
+   - Accent colour is now indigo (matches Astro's avatar). It drives primary buttons and progress bars through
+     the existing --ac / --acf variables, so everything that already used them updates automatically.
+   - .cr-* classes belong to course.js (Learn tab). Animate transform/opacity only (see v7 motion notes).
+   ===================================================================== */
+:root{--ac:#4f46e5;--acf:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ac:#818cf8;--acf:#0b0b1a}}
+:root[data-theme="dark"]{--ac:#818cf8;--acf:#0b0b1a}
+.sent{font-size:26px;line-height:1.3}
+.cr-lvls{display:flex;gap:8px;margin:0 0 12px}
+.cr-lv{flex:1;font:inherit;font-weight:700;font-size:14px;padding:9px 4px;text-align:center;border-radius:12px;border:1px solid var(--bd);background:var(--card);color:var(--fg);cursor:pointer}
+.cr-lv.on{border-color:var(--ac);color:var(--ac)}
+.cr-lv.pass{background:color-mix(in srgb,var(--das) 14%,var(--card))}
+.cr-lv.lock{opacity:.55}
+.cr-hero{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:0}
+.cr-hero .bar{background:rgba(255,255,255,.25)}.cr-hero .bar i{background:#fff}
+.cr-big{font-size:34px;font-weight:800;min-width:74px;height:74px;border-radius:20px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center}
+.cr-go,.cr-go2{margin-top:14px;border:0;font-weight:700}
+.cr-go{background:#fff;color:#4f46e5}
+.cr-go2{background:rgba(255,255,255,.18);color:#fff;margin-top:8px}
+.cr-path{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 0 4px}
+.cr-nw{display:flex;flex-direction:column;align-items:center;transform:translateX(var(--o,0));margin-bottom:6px}
+.cr-nw small{color:var(--mut);font-size:12px;margin-top:6px}
+.cr-node{width:68px;height:68px;border-radius:50%;border:0;font-size:26px;cursor:pointer;background:var(--card);color:var(--fg);box-shadow:0 5px 0 var(--bd),0 0 0 1px var(--bd) inset;transition:transform .1s,box-shadow .1s;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.cr-node:active:not(:disabled){transform:translateY(4px);box-shadow:0 1px 0 var(--bd),0 0 0 1px var(--bd) inset}
+.cr-node.done{background:var(--das);color:#fff;box-shadow:0 5px 0 rgba(0,0,0,.2)}
+.cr-node.cur{background:var(--ac);color:var(--acf);box-shadow:0 5px 0 rgba(0,0,0,.25);position:relative}
+.cr-node.cur::after{content:"";position:absolute;inset:-7px;border-radius:50%;border:3px solid var(--ac);opacity:.5;animation:cr-pulse 1.8s ease-out infinite}
+@keyframes cr-pulse{from{transform:scale(.9);opacity:.6}to{transform:scale(1.18);opacity:0}}
+.cr-node.lock{opacity:.5;cursor:not-allowed}
+.cr-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:10px;text-align:center}
+.cr-cal i{font-style:normal;font-size:12px;color:var(--mut)}
+.cr-d{height:36px;line-height:36px;border-radius:50%;font-size:14px}
+.cr-d.on{background:color-mix(in srgb,#f97316 18%,var(--card))}
+.cr-d.today{box-shadow:0 0 0 2px var(--ac) inset;font-weight:700}
+.cr-d.fut{opacity:.35}
+.cr-tops{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cr-top{font:inherit;color:var(--fg);display:flex;align-items:center;gap:10px;padding:8px;text-align:left;border-radius:12px;border:1px solid var(--bd);background:var(--card);cursor:pointer}
+.cr-top span{display:flex;flex-direction:column;line-height:1.2;font-size:14px}.cr-top small{color:var(--mut);font-size:12px}
+.cr-opt.good{border-color:var(--das);background:color-mix(in srgb,var(--das) 16%,var(--card))}
+.cr-opt.bad{border-color:#ef4444;background:color-mix(in srgb,#ef4444 14%,var(--card))}
+.cr-end .apose{display:block;margin:0 auto 6px}
+@media (prefers-reduced-motion:reduce){.cr-node.cur::after{animation:none}.cr-node{transition:none}}
+.cr-top svg{flex:none}
+.cr-top b{font-size:14px;word-break:normal;overflow-wrap:anywhere}

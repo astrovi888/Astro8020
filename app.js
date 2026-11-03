@@ -77,8 +77,11 @@ function sched(c,r){c=Object.assign({ef:2.5,iv:0,reps:0,sp:0,lp:0},c);if(c.st==n
  return n}
 const FMT=m=>m<60?Math.round(m)+" min":m<1440?Math.round(m/60)+" h":m<43200?Math.round(m/1440)+(Math.round(m/1440)==1?" day":" days"):m<525600?(Math.round(m/43200*10)/10)+" mo":(Math.round(m/525600*10)/10)+" yr";
 const lab=n=>FMT(n.dm);
-function review(k,r){const n=sched(ST.cards[k],r);n.due=Date.now()+n.dm*6e4;ST.cards[k]=n;addXP([2,5,10,15][[0,3,4,5].indexOf(r)])}
-function readF(){const g=(id,d)=>$(id)?$(id).value:d,f=ST.f;ST.f={r:g("fr",f.r),l:g("fl",f.l),t:g("ft",f.t),n:g("fn",f.n)}}
+// n.lr = time of this review. sync.js merge() uses it to decide which device's copy of a card is the newest.
+function review(k,r){const n=sched(ST.cards[k],r);n.due=Date.now()+n.dm*6e4;n.lr=Date.now();ST.cards[k]=n;addXP([2,5,10,15][[0,3,4,5].indexOf(r)])}
+// readF keeps the old filter when a field is not on screen (e.g. "Another session" from the results screen).
+// BUGFIX: the footer used to have id="ft" (same as the Theme select), so this returned undefined and the theme filter vanished.
+function readF(){const g=(id,d)=>{const e=$(id);return e&&e.value!==undefined?e.value:d},f=ST.f;ST.f={r:g("fr",f.r),l:g("fl",f.l),t:g("ft",f.t),n:g("fn",f.n)}}
 function form(msg){
  const f=ST.f,rs=[["0","Any range"]];for(let b=100;b<=1000;b+=100)rs.push([b,`${tab=="w"?"Rank":"Words"} ${b-99}–${b}`]);
  const sel=(id,l,o,v)=>`<label for="${id}">${l}</label><select id="${id}">${opts(o,v)}</select>`;
@@ -89,8 +92,20 @@ function form(msg){
 }
 function render(){q=[];topbar();tab=="p"?stats():tab=="a"?(asc=atot=cmb=0,cardA()):form()}
 const ok=(f,k)=>(f.r=="0"||k.band==+f.r)&&(f.l=="0"||k.lv==f.l)&&(f.t=="0"||k.theme==f.t);
+// Some sentences exist twice in the data files (same German text, different position). Position = card id, so the
+// scheduler saw two unrelated cards and the 2nd copy looked like "the same card came back right after Easy".
+// dedupe() keeps ONE copy per text: the copy you already have a card for (most reviewed), else the first. Nothing
+// is deleted or moved, so saved progress is untouched. Only used for sentence tabs (list = indexes into S).
+let SKEY=null;
+function dedupe(list,keyOf){
+ if(!SKEY||SKEY.length!=S.length)SKEY=S.map(s=>s[0].toLowerCase().replace(/[^a-zäöüß ]/g,"").replace(/\s+/g," ").trim());
+ const best={},reps=k=>{const c=ST.cards[keyOf(k)];return c?c.reps+1:0};
+ list.forEach(k=>{const g=SKEY[k];if(best[g]===undefined||reps(k)>reps(best[g]))best[g]=k});
+ return list.filter(k=>best[SKEY[k]]===k)
+}
 function begin(list,keyOf){
  const now=Date.now(),n=+ST.f.n;
+ if(tab=="s"||tab=="b")list=dedupe(list,keyOf);
  if(!list.length)return form("Nothing matches these filters yet. Loosen one of them.");
  if(tab=="b")q=shuf(list).slice(0,n);
  else{const due=list.filter(k=>ST.cards[keyOf(k)]&&ST.cards[keyOf(k)].due<=now),nw=list.filter(k=>!ST.cards[keyOf(k)]);q=[...due,...nw].slice(0,n)}

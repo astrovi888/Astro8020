@@ -6,16 +6,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Astrolingo – Learn German sentences, A1 to B2</title>
 <meta name="description" content="Learn German with real sentences, spaced repetition, listening, reading and a dictionary. Free, A1 to B2.">
-<meta name="theme-color" content="#18181b">
+<meta name="theme-color" content="#4f46e5">
 <meta property="og:site_name" content="Astrolingo">
 <meta property="og:title" content="Astrolingo – Learn German">
 <meta property="og:description" content="Real sentences, spaced repetition, pronunciation and stories for German learners, A1 to B2.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Astrolingo">
+<!-- Share previews: to get a picture when the link is shared, add <meta property="og:image" content="https://YOUR-DOMAIN/icon-512.png"> (must be a full address). -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%F0%9F%93%9A%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css?v=7"></head>
+<link rel="stylesheet" href="style.css?v=9"></head>
 <body><main>
 <noscript>Astrolingo needs JavaScript to run.</noscript>
 <header><div style="display:flex;gap:10px;align-items:center"><h1>Astrolingo</h1><button id="acct" class="chip hide" style="margin:0">Log in</button><button id="snd" class="chip" style="margin:0" aria-label="Toggle sounds">🔊</button></div><nav id="nav"><button data-t="s" class="on">Sentences</button><button data-t="b">Build</button><button data-t="a">Articles</button><button data-t="w">Words</button><button data-t="m">Match</button><button data-t="r">Read</button><button data-t="d">Dictionary</button><button data-t="p">Progress</button></nav></header>
-<div id="top"></div><div id="app"></div><div id="st">Saved on this device only</div><footer id="ft"><a href="#" data-m="about">About</a> · <a href="#" data-m="privacy">Privacy</a> · <a href="#" id="sup">Support the project</a></footer><div id="pop" role="status"></div><div id="md" class="md hide" role="dialog" aria-modal="true"><form id="mb" class="box mb"></form></div>
+<div id="top"></div><div id="app"></div><div id="st">Saved on this device only</div><footer id="foot"><!-- id was "ft", which collided with the Theme <select id="ft"> and broke "Another session" --><a href="#" data-m="about">About</a> · <a href="#" data-m="privacy">Privacy</a> · <a href="#" id="sup">Support the project</a></footer><div id="pop" role="status"></div><div id="md" class="md hide" role="dialog" aria-modal="true"><form id="mb" class="box mb"></form></div>
 </main>
 <nav id="bbar" class="bb" aria-label="Main"><button data-g="s" class="on"><i>📚</i>Learn</button><button data-g="m"><i>⏱️</i>Match</button><button data-g="r"><i>📖</i>Read</button><button data-g="d"><i>🔎</i>Dictionary</button><button data-g="p"><i>📊</i>Progress</button></nav>
 <script src="data-sentences.js?v=4"></script>
@@ -24,9 +29,9 @@
 <script src="data-more2.js?v=4"></script>
 <script src="data-curriculum.js?v=1"></script>
 <script src="data-words.js?v=4"></script>
-<script src="app.js?v=8"></script>
+<script src="app.js?v=9"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="sync.js?v=5"></script>
+<script src="sync.js?v=7"></script>
 <script src="data-stories.js?v=4"></script>
 <script src="data-stories2.js?v=4"></script>
 <script src="data-stories-a1.js?v=5"></script>
@@ -35,12 +40,14 @@
 <script src="data-stories-b2.js?v=5"></script>
 <script src="data-real.js?v=6"></script>
 <script src="persona.js?v=6"></script>
-<script src="features.js?v=6"></script>
+<script src="features.js?v=8"></script>
 <script src="path.js?v=6"></script>
-<script src="start.js?v=5"></script>
+<script src="start.js?v=6"></script>
 <script src="astro-art.js?v=7"></script>
 <script src="economy.js?v=6"></script>
 <script src="wordtap.js?v=6"></script>
 <script src="astro-config.js?v=1"></script>
-<script src="astro-chat.js?v=7"></script>
+<script src="astro-chat.js?v=8"></script>
+<script src="course.js?v=1"></script>
+<script>if("serviceWorker" in navigator&&/^https?:/.test(location.protocol))addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
 </body></html>

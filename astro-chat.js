@@ -125,6 +125,8 @@ document.addEventListener("keydown",e=>{if(e.target&&e.target.id=="cin"&&e.key==
 
 // floating button: Astro is always one tap away (small, never covers the bottom bar)
 const fab=document.createElement("button");fab.type="button";fab.className="afab";fab.setAttribute("aria-label","Ask Astro");fab.innerHTML=astroAv(42);fab.dataset.chat="open";document.body.appendChild(fab);
+// While Astro is switched off (default, Settings > Show Astro) no pop-up bubbles or name questions are shown.
+if(typeof window.astroSay=="function"){const _say=window.astroSay;window.astroSay=function(){if(!ST.astro)return;return _say.apply(this,arguments)}}
 // first meeting: ask for the name once
 setTimeout(()=>{if(!uname()&&!ST.nameAsked&&(ST.tour||ST.xp)&&typeof astroSay=="function"){ST.nameAsked=1;save();astroSay("Hi! I’m Astro, your German coach. What should I call you?",["Tell Astro",()=>openChat()],true)}},12000);
 })();

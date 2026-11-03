@@ -20,11 +20,12 @@ function merge(a,b){
  a=a||{};b=b||{};const r=Object.assign({},dflt,a),newer=(a.last||"")>=(b.last||"")?a:b;
  r.xp=Math.max(a.xp||0,b.xp||0);r.best=Math.max(a.best||0,b.best||0);r.streak=newer.streak||0;r.last=newer.last||"";r.today=newer.today||r.today;
  r.cards=Object.assign({},b.cards);
- for(const k in (a.cards||{})){const x=a.cards[k],y=r.cards[k];r.cards[k]=!y||x.reps>y.reps||(x.reps==y.reps&&x.due>y.due)?x:y}
+ for(const k in (a.cards||{})){const x=a.cards[k],y=r.cards[k];/* Newest review wins (lr = last-review time, set in review()). Old cards without lr fall back to the old rule. */
+r.cards[k]=!y||(x.lr||0)>(y.lr||0)||((x.lr||0)==(y.lr||0)&&(x.reps>y.reps||(x.reps==y.reps&&x.due>y.due)))?x:y}
  r.hist=Object.assign({},b.hist);for(const k in (a.hist||{}))r.hist[k]=Math.max(a.hist[k],r.hist[k]||0);
  r.hw=Object.assign({},b.hw);for(const k in (a.hw||{}))r.hw[k]=Math.max(a.hw[k],r.hw[k]||0);
  r.art=Object.assign({},b.art);for(const k in (a.art||{})){const y=r.art[k]||{ok:0,bad:0};r.art[k]={ok:Math.max(a.art[k].ok,y.ok),bad:Math.max(a.art[k].bad,y.bad)}}
- r.f=a.f||b.f||dflt.f;{const keep=k=>k[0]!="w"||(a.wv===2&&a.cards&&a.cards[k])||(b.wv===2&&b.cards&&b.cards[k]);for(const k in r.cards)if(!keep(k))delete r.cards[k];r.wv=2}r.ach=Object.assign({},b.ach,a.ach);r.mk=Object.assign({},b.mk,a.mk);r.read=Object.assign({},b.read,a.read);r.dq=Object.assign({},b.dq,a.dq);["nses","built","perfect","mbest","ce","cs","fb","fu","tm","pl1","pl2","pl3","pl4","pl5","pl6","pl7","pl8","pl9","pl10","pl11","pl12","plt","plt2","dg1","dg2","dg3","dg4","b1","b2","b3","b4"].forEach(k=>r[k]=Math.max(a[k]||0,b[k]||0));["snd","auto","slow","lb","nick","ads","nag","casual","aoff","alim","mf","mt","af","ci","cgs"].forEach(k=>{r[k]=a[k]!==undefined?a[k]:b[k]});r.dir=a.dir||b.dir;r.goal=a.goal||b.goal||10;return r;
+ r.f=a.f||b.f||dflt.f;{const keep=k=>k[0]!="w"||(a.wv===2&&a.cards&&a.cards[k])||(b.wv===2&&b.cards&&b.cards[k]);for(const k in r.cards)if(!keep(k))delete r.cards[k];r.wv=2}r.ach=Object.assign({},b.ach,a.ach);r.course=Object.assign({},b.course,a.course);r.course.passed=Object.assign({},(b.course||{}).passed,(a.course||{}).passed);r.mk=Object.assign({},b.mk,a.mk);r.read=Object.assign({},b.read,a.read);r.dq=Object.assign({},b.dq,a.dq);["nses","built","perfect","mbest","ce","cs","fb","fu","tm","pl1","pl2","pl3","pl4","pl5","pl6","pl7","pl8","pl9","pl10","pl11","pl12","plt","plt2","dg1","dg2","dg3","dg4","b1","b2","b3","b4"].forEach(k=>r[k]=Math.max(a[k]||0,b[k]||0));["snd","auto","slow","lb","nick","ads","nag","casual","aoff","astro","alim","mf","mt","af","ci","cgs"].forEach(k=>{r[k]=a[k]!==undefined?a[k]:b[k]});r.dir=a.dir||b.dir;r.goal=a.goal||b.goal||10;return r;
 }
 function setNote(t){$("st").textContent=t}
 async function push(){

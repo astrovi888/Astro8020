@@ -31,3 +31,16 @@ Status and to-do: TASKS_FOR_YOU.md (NEXT_STEPS.md is referenced there but is not
 **Cache busting.** After editing a file, bump its `?v=` number in index.html so returning visitors get the new copy.
 
 **Script order.** Scripts are plain `<script>` tags and later files wrap functions from earlier ones. Do not reorder them in index.html.
+
+## The course (Learn tab) - how levels work
+
+Defined in `course.js` (read its header comment first). Summary:
+- Levels A1, A2, B1, B2. Each level is cut into lessons of 10 cards (sentences and words, most frequent first = the 80/20 idea). A lesson unlocks when the previous one is done.
+- You move up only by passing a level test (15 questions, 12 right). The test unlocks after 70% of the level's lessons. "I know some German. Test me" lets a returning learner climb by tests alone.
+- Progress is not stored separately: a lesson is done when its cards are past the first learning step in `ST.cards`. Only `ST.course.passed` (levels passed) and `ST.course.started` are saved.
+- Card levels come from the data files: word levels from the CEFR word list, sentence levels in column 4 of each row. The 990 curriculum sentences have approximate, computed levels (see `data-curriculum.js`). Fix a level there, not in course.js.
+- The old XP "Lv N" label is replaced by the CEFR level everywhere. XP still exists for coins and the leaderboard.
+- Practice tab = the old Learn screen with all filters (free practice, not gated).
+
+## Install and offline
+`manifest.webmanifest`, `sw.js` and the icons make the site installable and available offline after one visit. `sw.js` is network-first, so updates are never stuck behind a cache.

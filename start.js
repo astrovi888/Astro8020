@@ -16,5 +16,6 @@ function close(){const o=document.getElementById("tour");if(o)o.remove();ST.tour
 document.addEventListener("click",e=>{const t=e.target.closest("[data-tr]");if(!t)return;const a=t.dataset.tr;if(a=="skip")close();else if(a=="back"){i--;show()}else if(i<ST_.length-1){i++;show()}else close()});
 const ac=document.getElementById("acct");
 if(ac){const b=document.createElement("button");b.id="helpb";b.type="button";b.className=ac.className;b.textContent="?";b.setAttribute("aria-label","How to use this site");b.onclick=()=>{i=0;show()};ac.parentNode.insertBefore(b,ac)}
-if(!ST.tour&&!ST.xp)setTimeout(()=>{i=0;show()},700);
+// The old tour no longer opens by itself: course.js shows a welcome + placement screen to new users instead.
+// The "?" button above still opens the tour on demand.
 })();

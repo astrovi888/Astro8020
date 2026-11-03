@@ -84,7 +84,7 @@ async function lbAct(v){
 /* ---- settings ---- */
 function settingsView(){const on=x=>x?"On":"Off",row=(t,d,k,val)=>`<div class="set"><div><b>${t}</b><div class="en" style="font-size:14px">${d}</div></div><button class="btn" data-set="${k}" style="width:auto;min-width:70px">${val}</button></div>`;
  const ss=window.speechSynthesis,nv=ss?ss.getVoices().filter(x=>/^de/i.test(x.lang)):[],ac=AC?AC.state:"not started yet";
- app.innerHTML=seg()+`<div class="box">${row("Hide Astro’s pop-ups","Astro is your coach. Turn this on if he gets too chatty.","aoff",on(ST.aoff))}${row("Sound effects","Short tones for right and wrong answers","snd",on(ST.snd!==false))}${row("Tap feedback","A tiny tick and vibration when you tap (vibration: Android)","hap",on(ST.hap!==false))}${row("Auto-play pronunciation","Speak German when an answer is revealed","auto",on(ST.auto))}${row("Always show real-life German","Open the casual, spoken version on every card that has one","casual",on(ST.casual))}${row("Hide Astro’s pop-ups","Astro is your coach. Turn this on if he gets too chatty.","aoff",on(ST.aoff))}${row("Slow speech","Slower, clearer pronunciation","slow",on(ST.slow))}${row("Support with ads","Optional and off by default. Clean, non-intrusive ads help keep this free.","ads",on(ST.ads))}
+ app.innerHTML=seg()+`<div class="box">${row("Show Astro","Astro’s chat button, tips and surprise gifts. Off by default so nothing covers your buttons.","astro",on(ST.astro))}${row("Sound effects","Short tones for right and wrong answers","snd",on(ST.snd!==false))}${row("Tap feedback","A tiny tick and vibration when you tap (vibration: Android)","hap",on(ST.hap!==false))}${row("Auto-play pronunciation","Speak German when an answer is revealed","auto",on(ST.auto))}${row("Always show real-life German","Open the casual, spoken version on every card that has one","casual",on(ST.casual))}${row("Hide Astro’s pop-ups","Astro is your coach. Turn this on if he gets too chatty.","aoff",on(ST.aoff))}${row("Slow speech","Slower, clearer pronunciation","slow",on(ST.slow))}${row("Support with ads","Optional and off by default. Clean, non-intrusive ads help keep this free.","ads",on(ST.ads))}
  <div class="note"><b>🪙 ${coins()} coins · ❄️ ${(ST.fb||0)-(ST.fu||0)} streak freeze${(ST.fb||0)-(ST.fu||0)==1?"":"s"}</b><div class="en" style="font-size:14px">Earn coins by practicing. A streak freeze protects your streak if you miss a day (max 2).</div><div style="height:8px"></div><button class="btn" data-do="buyfz">Buy a freeze · 50 🪙</button></div>
  <div class="note"><b>Check your audio</b><div class="row" style="margin-top:8px"><button class="btn" data-do="tsnd">Test sound</button><button class="btn" data-do="tvoice">Test German voice</button></div>
  <p class="en" style="font-size:13px;margin:10px 0 0">Sound engine: ${ac}. Speech: ${ss?"supported":"not supported"}. German voices found: ${nv.length?nv.map(x=>esc(x.name)).join(", "):"none"}.</p>
@@ -98,7 +98,7 @@ function nag(){if(ST.ads||USEMIN<15)return;const l=ST.nag?Date.parse(ST.nag):0;i
  app.insertAdjacentHTML("beforeend",`<div class="note" id="nag"><b>Hey, would you like to support the creator?</b><div class="en" style="font-size:14px">You can turn on ads. They’re clean, optional and off by default.</div><div class="row" style="margin-top:8px"><button class="btn p" data-do="adson">Turn on ads</button><button class="btn" data-do="adlater">Maybe later</button></div></div>`)}
 {const _d3=done;done=function(){_d3();adShow();nag()}}
 adLoad();
-function setting(k){ST[k]=k=="snd"?(ST.snd===false):k=="hap"?(ST.hap===false):!ST[k];save();sndBtn();settingsView();if(k=="snd")sfx.good();if(k=="ads")adLoad()}
+function setting(k){ST[k]=k=="snd"?(ST.snd===false):k=="hap"?(ST.hap===false):!ST[k];save();sndBtn();astroVis();settingsView();if(k=="snd")sfx.good();if(k=="ads")adLoad()}
 
 /* ---- stories: level -> story list -> story ---- */
 
@@ -260,6 +260,10 @@ document.addEventListener("change",e=>{if(e.target.id=="bb"||e.target.id=="bl"||
 $("nav").addEventListener("click",e=>{if(e.target.closest("[data-t]")){rs=-1;rl="";mgStop()}},true);
 $("snd").onclick=()=>{ST.snd=ST.snd===false;save();sndBtn();sfx.good()};
 if(ST.wv!==2){for(const k in ST.cards)if(k[0]=="w")delete ST.cards[k];ST.wv=2;save()}
+// Astro (chat button, pop-up bubble, gift box) is OFF by default: ST.astro must be true to show it.
+// CSS in style.css hides them via body.astro-off; astro-chat.js also blocks astroSay() while off.
+function astroVis(){document.body.classList.toggle("astro-off",!ST.astro)}
+astroVis();
 sndBtn();setTimeout(checkAch,1500);
 /* ---- navigation, tap feedback, flash ---- */
 const LT=[["s","Sentences"],["b","Build"],["a","Articles"],["w","Words"],["x","Real"]];

@@ -10,7 +10,7 @@ function limited(ip) {
   h.push(now); hits.set(ip, h); gDay.n++; if (hits.size > 5000) hits.clear(); return false;
 }
 const REFUSAL = "I can only help with German: words, grammar, pronunciation, writing, translation and how to learn it (including German for work and Ausbildung). Ask me something about German! 🇩🇪";
-const SYSTEM = (nm, c) => `You are Astro, a warm, smart German coach inside the language-learning site "Astro 80/20". You are friendly and encouraging.
+const SYSTEM = (nm, c) => `You are Astro, a warm, smart German coach inside the language-learning site "Astrolingo". You are friendly and encouraging.
 ${nm ? `The learner is called ${nm}. Use the name occasionally.` : ""}
 Learner context: ${Number(c.learned) || 0} sentences learned, streak ${Number(c.streak) || 0} days, ${Number(c.mistakes) || 0} open mistakes. If they have learned few sentences, keep explanations simple.
 
