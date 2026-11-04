@@ -29,7 +29,14 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-xc]");if(b
 {const _c=cas;cas=function(s){const r=_c(s);if(r)return r;const k=String(s[0]).replace(/[.!?]+$/,"").toLowerCase();for(const c of REAL)for(const p of c.p)if(p[0].replace(/[.!?]+$/,"").toLowerCase()==k)return _c([s[0],s[1],0,0,0,0,p[1].split(" / ")[0]]);return""}}
 
 /* ============ Ask Astro chat ============ */
-const CH=[];let askName=false,online=null,busyC=false;
+// CHAT MEMORY: the conversation is saved on this device (last 40 messages) so it survives closing the chat and reloading the page.
+// To clear it, run localStorage.removeItem("astro-chat-v1") or add a "New chat" button that empties CH and calls chSave().
+const CH=[];try{JSON.parse(localStorage.getItem("astro-chat-v1")||"[]").forEach(m=>{if(m&&m.h)CH.push(m)})}catch(e){}
+const chSave=()=>{try{localStorage.setItem("astro-chat-v1",JSON.stringify(CH.slice(-40)))}catch(e){}};
+{const _push=CH.push.bind(CH);CH.push=function(...a){const r=_push(...a);chSave();return r}}   // every push is saved automatically
+// SMART MODE (backend) STATE: a failure only pauses smart mode briefly (15 s; 2 min if the server says "not configured"),
+// it never switches it off for the whole visit. "why" is shown under the offline answer so problems are visible, not silent.
+let askName=false,online=null,offUntil=0,why="",busyC=false;
 /* ---- Smarter Astro: a small open-source model that runs ON THE USER'S PHONE (WebLLM + WebGPU). Free, no server, no key. ---- */
 const MODELS={light:["Qwen2.5-0.5B-Instruct-q4f16_1-MLC","Qwen2.5-0.5B-Instruct-q4f32_1-MLC"],better:["Qwen2.5-1.5B-Instruct-q4f16_1-MLC","Llama-3.2-1B-Instruct-q4f16_1-MLC","Qwen2.5-0.5B-Instruct-q4f16_1-MLC"]};
 let eng=null,bState=eng?"ready":"idle",bMsg="";
@@ -111,12 +118,12 @@ function setName_cmd(l,t){if(/(my name is|call me|ich hei(ß|ss)e)\s+\w/i.test(t
 async function ask(text){if(busyC)return;text=text.trim();if(!text)return;busyC=true;const i=$$("cin");if(i)i.value="";const cc=$$("cchips");if(cc)cc.remove();
  CH.push({r:"u",h:esc(text)});bubble("u",esc(text));
  if(askName){askName=false;const n=setName(text);if(n){const h=fmt(`Nice to meet you, ${n}! Ask me anything about German, or tell me how you want to practice.`);CH.push({r:"a",h});bubble("a",h);busyC=false;return}}
- const t=bubble("a","<span class='en'>…</span>");let out=null,paid=0;
- if(ONLINE&&online!==false){const ch=ecoChatCharge();if(ch.ok){paid=ch.cost;try{const r=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:CH.slice(-8).map(m=>({role:m.r=="u"?"user":"assistant",content:(m.raw||m.h).replace(/<br>/g,"\n").replace(/<[^>]+>/g,"").replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"')})),ctx:ctx()})});
-   if(r.ok){const j=await r.json();if(j&&j.reply){online=true;out=j.reply}}else if(r.status==403||r.status==404||r.status==501||r.status==503)online=false}catch(e){online=online===true?true:false}
+ const t=bubble("a","<span class='en'>…</span>");let out=null,paid=0;why="";
+ if(ONLINE&&Date.now()>=offUntil){const ch=ecoChatCharge();if(ch.ok){paid=ch.cost;try{const r=await fetch(API,{signal:(()=>{const c=new AbortController();setTimeout(()=>c.abort(),20000);return c.signal})(),method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:CH.slice(-8).map(m=>({role:m.r=="u"?"user":"assistant",content:(m.raw||m.h).replace(/<br>/g,"\n").replace(/<[^>]+>/g,"").replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"')})),ctx:ctx()})});
+   if(r.ok){const j=await r.json();if(j&&j.reply){online=true;out=j.reply}}else{offUntil=Date.now()+(r.status==501?12e4:15e3);why="server answered "+r.status}}catch(e){offUntil=Date.now()+15e3;why=e&&e.name=="AbortError"?"it took too long":"no connection"}
    if(!out&&paid){ST.cs=Math.max(0,(ST.cs||0)-paid);save();topbar()}}
   else{t.querySelector(".cbt").innerHTML=fmt(`That’s ${ecoCost.chat} 🪙 per message after your ${5} free ones today, and you’re short on coins. I can still answer the basics for free, like “how do I say…” and grammar questions.`);busyC=false;CH.push({r:"a",h:t.querySelector(".cbt").innerHTML});return}}
- if(!out){const kb=localReply(text);if(AI&&eng&&/Smarter Astro/.test(kb)){try{out=await llmAsk()}catch(e){}}out=out||kb}
+ if(!out){const kb=localReply(text);if(AI&&eng&&/Smarter Astro/.test(kb)){try{out=await llmAsk()}catch(e){}}out=out||(kb+(why?"\n\n(Offline answer: smart mode isn’t reachable right now, "+why+". I’ll try again on your next message.)":""))}
  const h=fmt(out);t.querySelector(".cbt").innerHTML=h;CH.push({r:"a",h,raw:out});const m=$$("cmsgs");if(m)m.scrollTop=m.scrollHeight;busyC=false}
 
 document.addEventListener("click",e=>{const b=e.target.closest("[data-chat]");if(!b)return;const v=b.dataset.chat;
