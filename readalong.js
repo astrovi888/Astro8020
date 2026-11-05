@@ -4,7 +4,7 @@
 // If this file is removed, the site works exactly as before.
 //
 // THREE FEATURES
-//  1. LISTEN ALONG (stories): ▶ plays the story with the German voice. The word being spoken lights up (yellow), words
+//  1. LISTEN ALONG (stories): ▶ plays the story with the German voice. The word being spoken glows (v11: illuminated text, no yellow box), words
 //     already spoken turn bright, the rest stay dim, like synced lyrics. ■ Stop, ⏸ Pause (continue later from the same
 //     word), 🐢 slow. While a session is running, TAP ANY WORD to jump there and keep reading from that word.
 //  2. READ ALOUD (stories): 🎤 you read each line, the mic follows you. Words you said correctly turn green as you say them,
@@ -52,12 +52,20 @@ const st=document.createElement("style");st.textContent=`
 .ra-bar .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.ra-bar .btn{width:auto;padding:8px 12px;margin:0}
 .ra-msg{font-size:13px;opacity:.75;margin-top:6px;min-height:18px}
 .ra-on .ln .de{color:var(--mut)}
-.rw{border-radius:4px;transition:color .15s,background-color .15s;cursor:pointer}
-.rw.done{color:var(--fg)}.rw.now{background:#ffd24a;color:#111}
+/* v11: AUTO-READ HIGHLIGHT. The old yellow box (background:#ffd24a) is replaced by an illuminated-text effect: words that
+   are still to come are dimmed, the word being spoken glows (text-shadow, no box, no layout change), and words already
+   spoken settle to full brightness. Only color/opacity/text-shadow/transform change, so it stays smooth. */
+.rw{display:inline-block;border-radius:4px;cursor:pointer;transition:color .28s ease,opacity .35s ease,text-shadow .4s ease,transform .3s cubic-bezier(.22,1,.36,1)}
+.ra-on .ln .de .rw{opacity:.5}
+.ra-on .ln .de .rw.done,.ra-on .ln .de .rw.ok,.ra-on .ln .de .rw.bad{opacity:1}
+.ra-on .ln .de .rw.done{opacity:1;color:var(--fg)}
+.ra-on .ln .de .rw.now{opacity:1;color:var(--glow-fg,#fff);transform:translateY(-1px);text-shadow:0 0 .55em var(--glow,rgba(129,140,248,.95)),0 0 1.4em var(--glow2,rgba(99,102,241,.55))}
+:root[data-theme="light"] .rw.now{--glow-fg:#3730a3;--glow:rgba(99,102,241,.45);--glow2:rgba(99,102,241,.25)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .rw.now{--glow-fg:#3730a3;--glow:rgba(99,102,241,.45);--glow2:rgba(99,102,241,.25)}}
 .rw.ok{color:#4ade80;font-weight:600}.rw.bad{color:#f87171;font-weight:600;display:inline-block;animation:ra-wig .35s 2}
 .ra-line{outline:2px solid var(--der);outline-offset:3px;border-radius:6px}
 @keyframes ra-wig{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
-@media (prefers-reduced-motion:reduce){.rw.bad{animation:none}.rw{transition:none}}
+@media (prefers-reduced-motion:reduce){.rw.bad{animation:none}.rw{transition:none}.rw.now{transform:none}}
 .lab-w{font-size:34px;font-weight:700;text-align:center;margin:14px 0 4px}.lab-e{text-align:center;opacity:.7;margin-bottom:12px}`;
 document.head.appendChild(st);
 

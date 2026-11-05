@@ -3,7 +3,7 @@
 // offline, the last copy that worked is served. Only same-site GET requests are touched; the AI backend (/api/)
 // and other sites (Supabase, translation) are never cached.
 // To force everyone to drop old caches after a big change, bump V.
-const V="astrolingo-v1";
+const V="astrolingo-v2";
 self.addEventListener("install",()=>self.skipWaiting());
 self.addEventListener("activate",e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==V).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener("fetch",e=>{

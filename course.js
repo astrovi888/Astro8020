@@ -104,11 +104,19 @@ function buildTest(L){
   qs.push({lab:toDe?"Choose the German word":"Choose the meaning",p:toDe?w.en:wde(w),o,a:o.indexOf(toDe?wde(w):w.en),de:wde(w),en:w.en})});
  return shuf(qs)
 }
+// FIX (v11): this used to `return` silently when the level was locked or already passed, so the button looked dead.
+// It now always tells the learner why. It also remembers the mode (lessons-unlocked test vs. "I know some German" ladder)
+// in `lastTest` so "Retake test" can repeat the SAME mode (before, a failed ladder test could never be retaken).
+let lastTest=null;
 function startTest(L,ladder){
- if(!unlocked(L)||CR().passed[L])return;
+ if(!unlocked(L))return pop(`Pass the ${LV[LV.indexOf(L)-1]||"previous"} test to unlock ${L}`);
+ if(CR().passed[L])return pop(`You already passed the ${L} test`);
  const st=lvStat(L);
  if(!ladder&&st.frac<NEED)return pop(`Finish ${Math.ceil(NEED*st.total)-st.done} more lessons to unlock the ${L} test`);
- live=null;T={L,qs:buildTest(L),n:0,ok:0,miss:[],ladder:!!ladder,ans:-1,times:[],left:0,t0:0};tab="c";testView()
+ const qs=buildTest(L);
+ if(!qs.length)return pop("There are not enough cards in this level for a test yet");   // would otherwise crash testView()
+ lastTest={L,ladder:!!ladder};
+ live=null;T={L,qs,n:0,ok:0,miss:[],ladder:!!ladder,ans:-1,times:[],left:0,t0:0};tab="c";testView()
 }
 function testView(){
  const x=T.qs[T.n],done=T.ans>=0;
@@ -132,7 +140,7 @@ function testEnd(){
  <div class="sent" style="min-height:0;text-align:center">${pass?`${L} passed!`:"Not this time"}</div>
  <p class="en" style="text-align:center;margin:0 0 10px">${T.ok} of ${T.qs.length} right. You need ${PASS} (80%).${flag&&T.ok>=PASS?" We could not verify this attempt (answers were extremely fast, or you left the page). Please retake it calmly.":""}${pass?` +25 🪙 ${nx?`${nx} is now unlocked.`:"You finished the whole path!"}`:""}</p>
  ${T.miss.length?`<div class="note"><b>${pass?"Missed":"Review these"}</b>${T.miss.map(m=>`<div style="margin-top:6px">${esc2(m.de)}<div class="en" style="font-size:14px">${esc2(m.en)}</div></div>`).join("")}</div>`:""}
- <div class="row" style="margin-top:14px"><button class="btn" data-cr="home">Back to path</button>${pass&&nx&&T.ladder?`<button class="btn p" data-cr="ladder">Test ${nx} next</button>`:pass?"":`<button class="btn p" data-cr="test">Retake test</button>`}</div></div>`;
+ <div class="row" style="margin-top:14px"><button class="btn" data-cr="home">Back to path</button>${pass&&nx&&T.ladder?`<button class="btn p" data-cr="ladder">Test ${nx} next</button>`:pass?"":`<button class="btn p" data-cr="retake">Retake test</button>`}</div></div>`;
  T=null
 }
 
@@ -176,7 +184,7 @@ function courseView(){
  ${nx?`<button class="btn cr-go" data-cr="next:${L}">Continue · ${label(nx)}</button>`:""}
  ${due?`<button class="btn cr-go2" data-cr="review">Review ${due} due card${due==1?"":"s"}</button>`:""}</div>
  ${passed?`<div class="note" style="margin-top:12px"><b>✓ ${L} passed</b><div class="en" style="font-size:14px">${c.passed[L]}</div></div>`:`<div class="note" style="margin-top:12px"><b>🏆 ${L} test</b><div class="en" style="font-size:14px">${testOK?`Unlocked. Pass it (12 of 15) to unlock ${LV[LV.indexOf(L)+1]||"the finish line"}.`:`Unlocks after ${needMore} more lesson${needMore==1?"":"s"}. Move up only by proving it.`}</div>
- <button class="btn${testOK?" p":""}" data-cr="test" style="margin-top:8px"${testOK?"":" disabled"}>Take the ${L} test</button>
+ <button class="btn${testOK?" p":" cr-locked"}" data-cr="test" style="margin-top:8px"${testOK?"":' aria-disabled="true"'}>${testOK?"":"🔒 "}Take the ${L} test</button>
  ${L=="A1"&&st.done<3?`<button class="btn" data-cr="placement" style="margin-top:8px">I know some German. Test me from A1</button>`:""}</div>`}
  ${ext("top")}
  <div class="cr-path">${a>0?`<button type="button" class="chip" data-cr="all">Show earlier lessons</button>`:""}${path}${b<st.n.length?`<button type="button" class="chip" data-cr="all">Show all ${st.n.length} lessons</button>`:""}</div>
@@ -191,10 +199,11 @@ function reminder(){
 }
 function more(){
  openSheet(`<div style="padding:4px 2px;max-height:70vh;overflow:auto"><b style="font-size:18px">More</b><div style="height:8px"></div>
- ${[["u","📈","My profile and weak spots"],["k","🎤","Speaking practice"],["m","⏱️","Word Match Blitz"],["r","📖","Read stories"],["d","🔎","Dictionary and translate"],["l","🎓","Classic lessons and dialogues"],["set","⚙️","Settings"],["ab","ℹ️","About Astrolingo"]].map(([k,i2,t])=>`<button type="button" class="btn" data-cr="go:${k}" style="text-align:left;margin:6px 0">${i2} ${t}</button>`).join("")}</div>`)
+ ${[["Practice",[["k","🎤","Speaking practice"],["m","⏱️","Word Match Blitz"],["r","📖","Read stories"],["d","🔎","Dictionary and translate"],["l","🎓","Classic lessons and dialogues"]]],["You",[["u","📈","My profile and weak spots"],["set","⚙️","Settings"]]],["Help",[["help","❓","How Astrolingo works"],["ab","ℹ️","About, privacy and credits"]]]].map(([h,rows])=>`<div class="mo-h">${h}</div>`+rows.map(([k,i2,t])=>`<button type="button" class="btn mo-b" data-cr="go:${k}">${i2} ${t}</button>`).join("")).join("")}</div>`)
 }
 function goTo(k){
  try{closeSheet()}catch(e){}
+ if(k=="help"){return typeof openTour=="function"&&openTour()}   // v11: tour is reachable from More even after the "?" icon is dismissed
  if(k=="ab"){const a=document.querySelector('[data-m="about"]');return a&&a.click()}
  if(k=="set"){tab="p";ptab="t"}else tab=k;
  live=null;rs=-1;rl="";try{mgStop()}catch(e){}render();scrollTo&&scrollTo(0,0)
@@ -215,6 +224,7 @@ const A={
  review(){startReview()},
  test(){const L=(live&&live.L)||(T&&T.L)||viewL||cur();startTest(L==="done"?"B2":(CR().passed[L]?cur():L),false)},
  quit(){T=null;A.home()},
+ retake(){const m=lastTest;if(!m)return A.home();startTest(m.L,m.ladder)},   // v11: same level + same mode as the attempt that just ended
  ans(j){if(!T||T.ans>=0)return;T.times.push(Date.now()-T.t0);T.ans=+j;const x=T.qs[T.n];if(T.ans==x.a){T.ok++;try{sfx.good()}catch(e){}}else{T.miss.push(x);try{sfx.bad()}catch(e){}}testView()},
  tnext(){if(!T)return;T.n++;T.ans=-1;T.n>=T.qs.length?testEnd():testView()},
  more(){more()},go(k){goTo(k)},ics(){reminder()}

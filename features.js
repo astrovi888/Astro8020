@@ -114,6 +114,10 @@ function fixQuotes(list){const out=[],open=t=>(t.match(/„/g)||[]).length-(t.ma
  return out}
 
 // Legacy stories (q/w format) get the same shape as the new ones (qs list).
+// FIX (v11): four legacy stories (Mein Zimmer, Der Ausflug am Samstag, Die neue Stelle, Zwischen zwei Welten) store their text as ONE
+// string "German|English" lines joined by newlines (or a literal \n). The reader then saw a 540/783/816/1060-character "sentence list"
+// (the "all crammed into one block" bug) and storyView() crashed on s.s.map. Split them into [german, english] pairs here.
+STORY.forEach(s=>{if(typeof s.s==="string")s.s=s.s.split(/\r?\n|\\n/).map(l=>l.trim()).filter(Boolean).map(l=>{const k=l.indexOf("|");return k<0?[l,""]:[l.slice(0,k).trim(),l.slice(k+1).trim()]})});
 STORY.forEach(s=>{s.e=s.e||({"Mein Tag":"☀️","Im Café":"☕","Der Hund im Park":"🐕","Eine Wohnung suchen":"🏢","Ein Brief an einen Freund":"✉️"})[s.t]||"📖";s.legacy=1;s.qs=s.q?[{q:s.q[0],o:s.q[1],a:0}]:[]});
 (function(){const nw=(window.NEWSTORY||[]).map(n=>({id:n.id,t:n.t,l:n.l,e:n.e||"📖",cat:n.cat||"",pron:n.pron||"",min:n.min||0,s:fixQuotes(n.s||[]),v:n.v||[],qs:n.qs||[]})),ts={};
  nw.forEach(n=>ts[n.t]=1);
